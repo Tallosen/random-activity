@@ -1,0 +1,1548 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#16233A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Random Activity">
+<meta name="description" content="Дневник библиотеки: посещения и книговыдача с рандомизацией по дням.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<title>Random Activity — учёт книговыдачи</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=PT+Sans+Narrow:wght@400;700&family=PT+Mono&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --ink:#16233A;
+  --ink-soft:#25334C;
+  --paper:#FBFAF7;
+  --rule:#DCE1EA;
+  --rule-soft:#EDF0F5;
+  --rule-mid:#B9C2D2;
+  --rule-strong:#95A1B5;
+  --pen:#23407A;
+  --pencil:#6E7A8C;
+  --stamp:#6A3FA0;
+  --stamp-soft:#EFE8F7;
+  --alert:#B0413E;
+  --ok:#2E6B4F;
+  --cell:48px;
+  --dcol:38px;
+  --hh:150px;
+  --gh:22px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--ink);color:var(--paper)}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.top{padding-top:max(0px, env(safe-area-inset-top))}
+.modal-card{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+body{font-family:"PT Sans","Segoe UI",system-ui,sans-serif;font-size:15px;overscroll-behavior:none}
+
+/* ---------- шапка ---------- */
+.top{position:sticky;top:0;z-index:40;background:var(--ink);border-bottom:1px solid #2C3B55}
+.brand{display:flex;align-items:baseline;gap:8px;padding:10px 12px 6px}
+.brand h1{font-family:"PT Sans Narrow",sans-serif;font-weight:700;font-size:19px;letter-spacing:.14em;text-transform:uppercase;margin:0}
+.brand .dot{width:7px;height:7px;border-radius:50%;background:var(--stamp);display:inline-block;margin-bottom:2px}
+.brand small{font-size:11px;color:#8494AC;letter-spacing:.04em}
+
+.monthbar{display:flex;align-items:center;gap:6px;padding:0 12px 8px}
+.monthbar button.nav{width:34px;height:34px;flex:0 0 34px}
+.monthbar button.arch{font-size:14px;margin-left:2px}
+.monthbar button.arch.has{border-color:var(--stamp);color:#D9C8F0}
+.monthlabel{flex:1;text-align:center;font-family:"PT Sans Narrow",sans-serif;font-size:17px;letter-spacing:.06em;text-transform:uppercase}
+.monthlabel span{color:#8494AC;margin-left:6px}
+
+.parts{display:flex;gap:6px;padding:0 12px 8px}
+.parts button{flex:1;background:#1B2942;border:1px solid #2C3B55;color:#8494AC;font-size:12px;padding:7px 4px}
+.parts button[aria-selected="true"]{background:#3A2A55;border-color:var(--stamp);color:#E4D8F5;font-weight:700}
+.tabs{display:flex;gap:0;padding:0 8px}
+.tabs button{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:#8494AC;
+  font-family:"PT Sans Narrow",sans-serif;font-size:14px;letter-spacing:.05em;text-transform:uppercase;padding:9px 2px}
+.tabs button[aria-selected="true"]{color:var(--paper);border-bottom-color:var(--stamp)}
+
+/* ---------- кнопки ---------- */
+button{font-family:"PT Sans Narrow",sans-serif;letter-spacing:.05em;color:var(--paper);
+  background:#22314A;border:1px solid #35496A;border-radius:4px;padding:8px 10px;font-size:13px;text-transform:uppercase}
+button:active{transform:translateY(1px)}
+button:focus-visible{outline:2px solid var(--stamp);outline-offset:2px}
+.primary{background:var(--stamp);border-color:var(--stamp);font-weight:700}
+.toolbar{display:flex;gap:6px;padding:10px 12px;flex-wrap:wrap;align-items:center}
+.toolbar .primary{flex:1;min-width:150px;padding:11px 10px;font-size:14px}
+.iconbtn{padding:8px 9px;font-size:12px}
+
+.warn{display:none;margin:10px 12px 2px;padding:10px 12px;border-radius:6px;
+  background:#3A2320;border:1px solid #7A3B36}
+.warn.show{display:block}
+.warn b{display:block;font-family:"PT Sans Narrow",sans-serif;font-size:13px;letter-spacing:.05em;
+  text-transform:uppercase;color:#F0A9A4;margin-bottom:4px}
+.warn span{display:block;font-size:12.5px;line-height:1.5;color:#D9BDBA}
+.bk{margin-bottom:8px;color:#8FA3C4}
+.bk button.link{background:none;border:0;padding:0;margin:0;color:#D9C8F0;text-decoration:underline;
+  font-family:inherit;font-size:12px;text-transform:none;letter-spacing:0}
+.totals{display:flex;gap:8px;padding:12px 12px 4px}
+.tfield{flex:1;background:#1B2942;border:1px solid #2C3B55;border-radius:5px;padding:5px 8px 6px}
+.tfield span{display:block;font-family:"PT Sans Narrow",sans-serif;font-size:10px;letter-spacing:.09em;
+  text-transform:uppercase;color:#8494AC;margin-bottom:1px}
+.tfield input{width:100%;background:none;border:0;color:var(--paper);font-family:"PT Mono",monospace;font-size:17px;padding:0}
+.tfield input:focus{outline:none;color:#D9C8F0}
+.tfield input.autoval{color:#9FB3D1}
+.tfield input::placeholder{color:#4A5A76}
+.strip{padding:0 12px 10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.strip .lbl{font-size:11px;color:#8494AC;text-transform:uppercase;letter-spacing:.08em;font-family:"PT Sans Narrow",sans-serif}
+.wd{width:30px;height:28px;padding:0;font-size:12px;background:#1B2942;border-color:#2C3B55;color:#8494AC}
+.wd[aria-pressed="true"]{background:#3A2A55;border-color:var(--stamp);color:#D9C8F0}
+select.mini{background:#1B2942;color:var(--paper);border:1px solid #2C3B55;border-radius:4px;padding:5px 6px;font-size:12px;font-family:"PT Sans Narrow",sans-serif}
+
+/* ---------- лист ---------- */
+.sheetwrap{background:var(--paper);color:var(--ink);border-radius:10px 10px 0 0;margin:0 6px;padding:10px 0 0;min-height:60vh}
+.sheettitle{padding:2px 12px 8px;display:flex;justify-content:space-between;align-items:flex-end;gap:8px;background:var(--paper);color:var(--ink)}
+.sheettitle h2{font-family:"PT Sans Narrow",sans-serif;font-size:15px;font-weight:700;margin:0;text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
+.sheettitle em{font-style:normal;font-size:11px;color:var(--pencil);text-align:right;max-width:52%}
+
+.scroll{overflow:auto;-webkit-overflow-scrolling:touch;max-height:70vh;position:relative;
+  border-top:1px solid var(--rule-mid)}
+table{border-collapse:separate;border-spacing:0;background:var(--paper);color:var(--ink);
+  font-family:"PT Mono",ui-monospace,monospace}
+th,td{border-right:1px solid var(--rule-soft);border-bottom:1px solid var(--rule-soft);padding:0;text-align:center;color:var(--ink)}
+thead th{background:var(--paper);color:var(--ink);padding:0;background-clip:padding-box}
+
+/* верхний ряд — названия групп */
+tr.grow th.grp{position:sticky;top:0;z-index:22;height:var(--gh);white-space:nowrap;
+  background:#F2F0EA;border-bottom:1px solid var(--rule-mid);border-right:1px solid var(--rule-mid);
+  font-family:"PT Sans Narrow","Arial Narrow",Arial,sans-serif;font-size:10.5px;font-weight:700;
+  letter-spacing:.09em;text-transform:uppercase;color:#6B7789}
+tr.grow th.grp span{display:block;padding:0 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+
+/* второй ряд — вертикальные подписи столбцов */
+tr.hrow th.vh.gend, td.gend{border-right:1px solid var(--rule)}
+tr.grow th.grp:last-child{border-right:0}
+tr.hrow th.vh:last-child, tbody td:last-child{border-right:0}
+table{border-right:1px solid var(--rule)}
+/* группы различаются лёгкой заливкой, а не жирными линиями */
+td.gA{background:#F7F6F1}
+tr.hrow th.vh.gA{background:#F7F6F1}
+tr.grow th.grp.gA{background:#EDEBE4}
+tr.hrow th.vh{position:sticky;top:var(--gh);z-index:21;height:var(--hh);width:var(--cell);min-width:var(--cell);
+  border-bottom:1px solid var(--rule-strong);vertical-align:bottom}
+tr.hrow th.vh .rot{writing-mode:vertical-rl;transform:rotate(180deg);
+  display:block;height:var(--hh);padding:8px 3px;
+  font-family:"PT Sans Narrow","Arial Narrow",Arial,sans-serif;font-size:11px;line-height:1.15;
+  color:var(--ink-soft);font-weight:400;text-align:left;white-space:normal;overflow:hidden}
+
+/* угловая ячейка «Дата» */
+th.datehead{position:sticky;left:0;top:0;z-index:32;width:var(--dcol);min-width:var(--dcol);
+  background:#F2F0EA;border-bottom:1px solid var(--rule-strong);
+  border-right:0;box-shadow:1px 0 0 0 var(--rule-strong);vertical-align:middle}
+th.datehead .dlabel{writing-mode:vertical-rl;transform:rotate(180deg);
+  font-family:"PT Sans Narrow","Arial Narrow",Arial,sans-serif;font-size:11px;font-weight:700;
+  color:var(--ink);margin:0 auto;max-height:calc(var(--gh) + var(--hh) - 10px);overflow:hidden}
+
+td.date{position:sticky;left:0;z-index:15;background:#FAF9F6;background-clip:padding-box;
+  width:var(--dcol);min-width:var(--dcol);
+  font-family:"PT Sans Narrow",sans-serif;font-size:13px;color:var(--pencil);height:32px;
+  border-right:0;box-shadow:1px 0 0 0 var(--rule-mid)}
+td.date button{all:unset;display:block;width:100%;height:32px;line-height:32px;font-family:inherit;font-size:13px;color:inherit}
+tr.off td.date button{color:var(--pencil)}
+
+input.cell{width:var(--cell);height:32px;border:0;background:transparent;text-align:center;
+  font-family:"PT Mono",monospace;font-size:16px;color:var(--pen);padding:0}
+input.cell:focus{outline:2px solid var(--stamp);outline-offset:-2px;background:#fff}
+input.cell[readonly]{color:var(--ink);background:#F4F6F9}
+input.cell.auto{background:#EEF4EF;color:var(--ok);font-weight:700}
+input.cell.own{box-shadow:inset 0 0 0 1px var(--stamp)}
+input.cell.plan.autoval{color:var(--ok)}
+th.vh.ownhead .rot{color:var(--stamp);font-weight:700}
+td.incl,td.gA.incl{background:#FAF8F2}
+th.vh.inclhead{background:#FAF8F2}
+th.vh.inclhead .rot{font-style:italic}
+input.cell.lock{background:#F0EFEB;cursor:not-allowed}
+td:has(input.cell.lock),td.gA:has(input.cell.lock){background:#F0EFEB}
+th.vh.lockhead .rot{color:var(--pencil)}
+input.cell.plan{color:var(--stamp);font-weight:700;background:#F4EFFA}
+input.cell.bad{background:#FBE9E8;color:var(--alert)}
+td.wide input.cell{width:calc(var(--cell) + 8px)}
+
+tr.off td:not(.date){background:
+  url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='32'><path d='M0 16 q4.5 -6 9 0 t9 0 t9 0 t9 0' fill='none' stroke='%23AAB4C4' stroke-width='1'/></svg>") repeat-x center;
+  background-color:#F5F4EF}
+tr.off input.cell{visibility:hidden}
+tr.sum td,tr.sum td.gA{background:#F2F0EA;box-shadow:inset 0 1px 0 0 var(--rule-strong)}
+tr.sum td.date{box-shadow:1px 0 0 0 var(--rule-mid), inset 0 1px 0 0 var(--rule-strong)}
+tr.sum td.date{background:#EFEFEA}
+tr.off td.date{background:#F3F2EE}
+tr.carry td,tr.carry td.gA{background:#FBFAF6}
+tr.carry td.date{background:#FBFAF6}
+tr.rowlabel td.date{font-size:9px;line-height:1.05;letter-spacing:0}
+tbody tr:last-child td{border-bottom:1px solid var(--rule-mid)}
+.newmonth td{height:26px}
+
+/* ---------- статус ---------- */
+.status{margin:0 6px;background:var(--paper);color:var(--ink);padding:10px 12px 16px;border-top:1px dashed var(--rule)}
+.status h3{font-family:"PT Sans Narrow",sans-serif;text-transform:uppercase;font-size:12px;letter-spacing:.1em;margin:0 0 6px;color:var(--pencil)}
+.msg{font-size:13px;padding:5px 0 5px 20px;position:relative;line-height:1.35}
+.msg:before{position:absolute;left:0;top:5px;font-family:"PT Sans Narrow",sans-serif}
+.msg.warn{color:var(--alert)}
+.msg.warn:before{content:"!";color:var(--alert);font-weight:700}
+.msg.good{color:var(--ok)}
+.msg.good:before{content:"✓"}
+.footnote{padding:14px 18px 30px;font-size:12px;color:#7C8CA6;line-height:1.5}
+
+/* ---------- модалка ---------- */
+.sheet-modal{position:fixed;inset:0;background:rgba(10,16,27,.72);z-index:60;display:none;align-items:flex-end}
+.sheet-modal.open{display:flex}
+.modal-card{background:var(--paper);color:var(--ink);width:100%;border-radius:12px 12px 0 0;padding:16px 16px 24px;max-height:80vh;overflow:auto}
+.modal-card h3{font-family:"PT Sans Narrow",sans-serif;text-transform:uppercase;letter-spacing:.08em;margin:0 0 12px;font-size:15px}
+.modal-card button{width:100%;margin-bottom:8px;background:#EDEFF3;color:var(--ink);border-color:var(--rule);padding:12px;font-size:14px}
+.modal-card .danger{color:var(--alert)}
+.modal-card .hint{font-size:12px;color:var(--pencil);line-height:1.45;margin:0 0 12px}
+.daygrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:14px}
+.daygrid button{margin:0;padding:0;height:40px;font-family:"PT Mono",monospace;font-size:14px;
+  background:#fff;border:1px solid var(--rule);color:var(--ink);border-radius:5px}
+.archrow{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--rule)}
+.archrow:last-of-type{border-bottom:0}
+.archrow .an{flex:1;min-width:0}
+.archrow .an b{display:block;font-family:"PT Sans Narrow",sans-serif;font-size:15px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.05em}
+.archrow .an span{display:block;font-family:"PT Mono",monospace;font-size:11px;color:var(--pencil);margin-top:2px}
+.archrow.cur .an b{color:var(--stamp)}
+.archrow.cur .an b:after{content:' · сейчас';font-size:10px;letter-spacing:.06em}
+.archrow button{width:auto;margin:0;padding:8px 11px;font-size:12px;flex:0 0 auto}
+.archrow button.del{color:var(--alert);background:#fff;border-color:#E7CFCE}
+.archempty{font-size:13px;color:var(--pencil);padding:6px 0 14px}
+.daygrid button .wdn{display:block;font-family:"PT Sans Narrow",sans-serif;font-size:9px;color:var(--pencil);line-height:1}
+.daygrid button[data-state="week"]{background:#EDEEF0;color:var(--pencil);border-color:var(--rule)}
+.daygrid button[data-state="holi"]{background:var(--stamp);border-color:var(--stamp);color:#fff;font-weight:700}
+.daygrid button[data-state="holi"] .wdn{color:#E0D2F5}
+#btnHoli b{color:var(--stamp);font-weight:700}
+
+@media (prefers-reduced-motion:no-preference){
+  input.cell.ink{animation:ink .28s ease-out both}
+  @keyframes ink{from{opacity:0;transform:translateY(-2px)}to{opacity:1;transform:none}}
+}
+@media print{
+  body{background:#fff;color:#000}
+  .top,.toolbar,.strip,.status,.footnote,.sheet-modal{display:none!important}
+  .sheetwrap{margin:0;border-radius:0}
+  tr.grow th.grp,tr.hrow th.vh,th.datehead,td.date{position:static}
+  .scroll{overflow:visible;max-height:none}
+  input.cell{color:#000}
+}
+</style>
+
+<div class="top">
+  <div class="brand">
+    <span class="dot"></span>
+    <h1>Random Activity</h1>
+    <small>учёт книговыдачи</small>
+  </div>
+  <div class="monthbar">
+    <button class="nav" id="prevM" aria-label="Предыдущий месяц">‹</button>
+    <div class="monthlabel" id="monthLabel"></div>
+    <button class="nav" id="nextM" aria-label="Следующий месяц">›</button>
+    <button class="nav arch" id="btnArch" aria-label="Сохранённые месяцы">☰</button>
+  </div>
+  <div class="parts" id="parts">
+    <button data-part="1">Часть 1 · посещения</button>
+    <button data-part="2">Часть 2 · книговыдача</button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+</div>
+
+<div class="warn" id="warnBox"></div>
+
+<div class="totals">
+  <div class="tfield"><span id="lAdult">Общий</span><input id="tAdult" inputmode="numeric" placeholder="3048"></div>
+  <div class="tfield"><span>15–17</span><input id="tY15" inputmode="numeric" placeholder="авто"></div>
+  <div class="tfield"><span>18–35</span><input id="tY35" inputmode="numeric" placeholder="авто"></div>
+</div>
+
+<div class="toolbar">
+  <button class="primary" id="btnRnd">Рандомизировать часть 2</button>
+  <button class="iconbtn" id="btnMenu">Ещё</button>
+</div>
+
+<div class="strip">
+  <span class="lbl">Выходные:</span>
+  <span id="weekdays"></span>
+  <button class="iconbtn" id="btnHoli">Праздники <b id="holiCount"></b></button>
+  <span class="lbl" style="margin-left:2px">Разброс:</span>
+  <select class="mini" id="spread">
+    <option value="0.05">ровный</option>
+    <option value="0.08">обычный</option>
+    <option value="0.16" selected>живой</option>
+  </select>
+</div>
+
+<div class="sheetwrap">
+  <div class="sheettitle">
+    <h2 id="sheetName"></h2>
+    <em id="sheetHint">Фиолетовые столбцы — только твои числа, остальное подберётся само</em>
+  </div>
+  <div class="scroll" id="scroll"></div>
+</div>
+
+<div class="status">
+  <h3>Проверка</h3>
+  <div id="status"></div>
+</div>
+
+<div class="footnote">
+  <div id="bkHint" class="bk"></div>
+  Данные сохраняются автоматически. Нажми на число дня в таблице или открой «Праздники», чтобы закрыть день во всех листах.
+</div>
+
+<div class="sheet-modal" id="archModal">
+  <div class="modal-card">
+    <h3>Сохранённые месяцы</h3>
+    <p class="hint">Всё, что ты заполнял, хранится по месяцам. Открой нужный, чтобы посмотреть или поправить.</p>
+    <div id="archList"></div>
+    <button id="aClose">Закрыть</button>
+  </div>
+</div>
+
+<div class="sheet-modal" id="holiModal">
+  <div class="modal-card">
+    <h3>Нерабочие дни месяца</h3>
+    <p class="hint">Нажми на число — день закроется во всех шести листах: и в Части 1, и в Части 2. Серые — выходные по дню недели, фиолетовые — праздники.</p>
+    <div class="daygrid" id="dayGrid"></div>
+    <button id="hClear">Снять все праздники</button>
+    <button id="hClose">Готово</button>
+  </div>
+</div>
+
+<div class="sheet-modal" id="modal">
+  <div class="modal-card">
+    <h3>Действия</h3>
+    <button id="mArch">Сохранённые месяцы</button>
+    <button id="mExample">Заполнить пример (август по фото, обе части)</button>
+    <button id="mCsv">Выгрузить лист в CSV</button>
+    <button id="mJson">Сохранить резервную копию (JSON)</button>
+    <button id="mLoad">Загрузить из файла</button>
+    <button id="mPrint">Печать / PDF</button>
+    <button id="mClearDays" class="danger">Очистить дни этого листа</button>
+    <button id="mClearAll" class="danger">Очистить эту часть за месяц</button>
+    <button id="mClose">Закрыть</button>
+    <input type="file" id="fileIn" accept="application/json" style="display:none">
+  </div>
+</div>
+
+<script>
+/* ======================= ОПИСАНИЕ ЛИСТОВ ======================= */
+const CAT = 'cat', SUB = 'sub', TOT = 'tot', MIR = 'mir', YEAR = 'year', CALC = 'calc';
+
+const ADULT_COLS = [
+  {id:'tot',   l:'Всего выдано',                 k:TOT, g:'Выдано'},
+  {id:'opl',   l:'ОПЛ (6/8,9)',                  k:CAT, g:'По отраслям знаний'},
+  {id:'enl',   l:'ЕНЛ, матем., медицина (2, 5)', k:CAT, g:'По отраслям знаний'},
+  {id:'teh',   l:'Техника (3)',                  k:CAT, g:'По отраслям знаний'},
+  {id:'agr',   l:'Сельское хозяйство (4)',       k:CAT, g:'По отраслям знаний'},
+  {id:'art',   l:'Искусство (85)',               k:CAT, g:'По отраслям знаний'},
+  {id:'spo',   l:'Спорт (75)',                   k:CAT, g:'По отраслям знаний'},
+  {id:'fic',   l:'Худож. литература (84, 82)',   k:CAT, dom:true, g:'По отраслям знаний'},
+  {id:'pre',   l:'Дошкольная литература',        k:CAT, lock:true, g:'По отраслям знаний'},
+  {id:'lan',   l:'Язык, фол. лит-вед (81, 83)',  k:CAT, g:'По отраслям знаний'},
+  {id:'out',   l:'В т.ч. внестационар',          k:SUB, lock:true, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'per',   l:'В т.ч. периодическое издание', k:SUB, own:true, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'phy',   l:'В т.ч. на физич. носителях',   k:MIR, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'kra',   l:'В т.ч. краеведение',           k:SUB, own:true, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'cd',    l:'В т.ч. CD дисков (лиценз.)',   k:SUB, lock:true, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'oth',   l:'В т.ч. на других носителях',   k:SUB, lock:true, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'vso',   l:'В т.ч. по ВСО',                k:SUB, own:true, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'god',   l:'К году',                       k:YEAR, g:'Итого'}
+];
+
+const YOUTH_COLS = [
+  {id:'tot',   l:'Всего выдано',                    k:TOT, g:'Выдано'},
+  {id:'opl',   l:'ОПЛ (6/8,9)',                     k:CAT, g:'По отраслям знаний'},
+  {id:'enl',   l:'ЕНЛ (2,5)',                       k:CAT, g:'По отраслям знаний'},
+  {id:'teh',   l:'Техника (3)',                     k:CAT, g:'По отраслям знаний'},
+  {id:'agr',   l:'Сельское хозяйство (4)',          k:CAT, g:'По отраслям знаний'},
+  {id:'art',   l:'Искусство (85)',                  k:CAT, g:'По отраслям знаний'},
+  {id:'spo',   l:'Спорт (75)',                      k:CAT, g:'По отраслям знаний'},
+  {id:'fic',   l:'Художественная литература (84,82)',k:CAT, dom:true, g:'По отраслям знаний'},
+  {id:'pre',   l:'Дошкольная литература',           k:CAT, lock:true, g:'По отраслям знаний'},
+  {id:'lan',   l:'Языкознание (81,83)',             k:CAT, g:'По отраслям знаний'},
+  {id:'out',   l:'В т.ч. внестационар',             k:SUB, lock:true, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'rem',   l:'В т.ч. удалённо',                 k:SUB, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'per',   l:'В т.ч. периодические издания',    k:SUB, own:true, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'phy',   l:'В т.ч. на физич. носителях',      k:MIR, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'kra',   l:'В т.ч. краеведение',              k:SUB, own:true, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'vso',   l:'В т.ч. по ВСО',                   k:SUB, own:true, incl:true, g:'В т.ч. выдано по видовому составу'},
+  {id:'god',   l:'К году',                          k:YEAR, g:'Итого'}
+];
+
+const ADULT1_COLS = [
+  {id:'utot', l:'всего',                       k:SUB, own:true, g:'Пользователи'},
+  {id:'uvne', l:'в т.ч. внестационар',         k:SUB, own:true, g:'Пользователи'},
+  {id:'tot',  l:'всего',                          k:TOT, own:true, g:'Посещения'},
+  {id:'amm',  l:'всего м/м',                      k:SUB, own:true, g:'Посещения'},
+  {id:'stot', l:'всего',                          k:SUB, own:true, g:'Стационар'},
+  {id:'sbib', l:'библиотечно-информационные',     k:SUB, own:true, g:'Стационар'},
+  {id:'smm',  l:'массовое мероприятие',           k:SUB, own:true, g:'Стационар'},
+  {id:'vtot', l:'всего',                       k:SUB, own:true, g:'Внестационар'},
+  {id:'vkn',  l:'книгоношество, пункт выдачи', k:SUB, own:true, g:'Внестационар'},
+  {id:'vmm',  l:'внестационар м/м',                         k:SUB, own:true, g:'Внестационар'},
+  {id:'rem',  l:'удалённые обращения',                k:SUB, own:true, g:'Удалённые'},
+  {id:'etot', l:'всего',               k:SUB, own:true, g:'Массовые мероприятия'},
+  {id:'estac',l:'стационар',                    k:SUB, own:true, g:'Массовые мероприятия'},
+  {id:'evne', l:'внестационар',                 k:SUB, own:true, g:'Массовые мероприятия'}
+];
+
+const YOUTH1_COLS = [
+  {id:'utot', l:'ВСЕГО',                k:SUB, own:true, g:'Число пользователей'},
+  {id:'ustac',l:'в т.ч. стационарно',                   k:SUB, own:true, g:'Число пользователей'},
+  {id:'uvne', l:'в т.ч. внестационарно',                k:SUB, own:true, g:'Число пользователей'},
+  {id:'usite',l:'в т.ч. по сайту',                      k:SUB, own:true, g:'Число пользователей'},
+  {id:'tot',  l:'ВСЕГО с удалёнными',             k:TOT, own:true, g:'Посещения'},
+  {id:'svt',  l:'ВСЕГО (стац. + внестац.)',                  k:SUB, own:true, g:'Посещения'},
+  {id:'amm',  l:'ВСЕГО посещение м/м',                       k:SUB, own:true, g:'Посещения'},
+  {id:'rem',  l:'в т.ч. удалённых и по сайту',     k:SUB, own:true, g:'Посещения'},
+  {id:'stot', l:'всего',                        k:SUB, own:true, g:'Стационарно'},
+  {id:'sbib', l:'в т.ч. библиотечно-информ.',         k:SUB, own:true, g:'Стационарно'},
+  {id:'smm',  l:'в т.ч. массовые',                           k:SUB, own:true, g:'Стационарно'},
+  {id:'vtot', l:'всего',                     k:SUB, own:true, g:'Внестационарно'},
+  {id:'vkn',  l:'в т.ч. пункты выдачи, книгонош.',       k:SUB, own:true, g:'Внестационарно'},
+  {id:'vmm',  l:'в т.ч. массовые',            k:SUB, own:true, g:'Внестационарно'},
+  {id:'etot', l:'всего',               k:SUB, own:true, g:'Массовые мероприятия'},
+  {id:'estac',l:'стационарно',                  k:SUB, own:true, g:'Массовые мероприятия'},
+  {id:'evne', l:'внестационарно',               k:SUB, own:true, g:'Массовые мероприятия'}
+];
+
+const SHEETS = [
+  {id:'p1adult', part:1, tab:'Общий', name:'Взрослый дневник. Часть 1',    cols:ADULT1_COLS, dateHead:'Дата'},
+  {id:'p1y15',   part:1, tab:'15–17', name:'Молодёжь 15–17 лет. Часть 1',  cols:YOUTH1_COLS, dateHead:'Число месяца'},
+  {id:'p1y35',   part:1, tab:'18–35', name:'Молодёжь 18–35 лет. Часть 1',  cols:YOUTH1_COLS, dateHead:'Число месяца'},
+  {id:'adult',   part:2, tab:'Общий', name:'Взрослый дневник. Часть 2',   cols:ADULT_COLS, dateHead:'Дата'},
+  {id:'y15',     part:2, tab:'15–17', name:'Молодёжь 15–17 лет. Часть 2',  cols:YOUTH_COLS, dateHead:'Число месяца'},
+  {id:'y35',     part:2, tab:'18–35', name:'Молодёжь 18–35 лет. Часть 2',  cols:YOUTH_COLS, dateHead:'Число месяца'}
+];
+const GROUPS = {1:['p1adult','p1y15','p1y35'], 2:['adult','y15','y35']};
+const groupOf = id => GROUPS[sheetDef(id).part];
+
+// доли рубрик от месячного итога — сняты с реальных дневников за август
+const PROFILE = {
+  adult:{cats:{opl:.021, enl:.021, teh:.008, agr:.013, art:.004, spo:.002, lan:.003}},
+  y15:  {cats:{opl:.055, enl:.044, teh:.022, agr:.019, art:.011, spo:.011, lan:.008}},
+  y35:  {cats:{opl:.066, enl:.109, teh:.022, agr:.049, art:.016, spo:.011, lan:.022}}
+};
+const YOUTH_SHARE = {y15:[0.10,0.14], y35:[0.05,0.075], p1y15:[0.08,0.11], p1y35:[0.06,0.09]};
+// доля молодёжи в периодике / краеведении / ВСО от того, что стоит в общем листе
+const OWN_SHARE   = {y15:[0.20,0.40], y35:[0.15,0.35], p1y15:[0.12,0.28], p1y35:[0.22,0.42]};
+
+const MONTHS = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+const WD = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+/* ======================= СОСТОЯНИЕ ======================= */
+const today = new Date();
+let state = {
+  year: today.getFullYear(),
+  month: today.getMonth()+1,
+  part: 1,
+  active: 'p1adult',
+  activeOf: {1:'p1adult', 2:'adult'},
+  weekOff: [5],          // 0=Пн … 6=Вс
+  spread: 0.16,
+  closed: {},            // старый формат, читается при загрузке
+  holiday: {},           // "2026-8" -> [дни], отмечены вручную
+  workday: {},           // "2026-8" -> [дни], открыты вручную вопреки выходному
+  sheets: {}             // "2026-8|adult" -> {plan:{}, days:{}, carry:{}}
+};
+
+const ym = () => state.year+'-'+state.month;
+const key = id => ym()+'|'+id;
+const sheetDef = id => SHEETS.find(s=>s.id===id);
+const num = v => { const x = parseInt(String(v ?? '').replace(/[^0-9-]/g,''),10); return isNaN(x)?0:x; };
+const daysInMonth = () => new Date(state.year, state.month, 0).getDate();
+const weekdayOf = d => (new Date(state.year, state.month-1, d).getDay()+6)%7;
+
+function data(id){
+  const k = key(id);
+  if(!state.sheets[k]) state.sheets[k] = {plan:{}, days:{}, carry:{}, auto:{}};
+  if(!state.sheets[k].auto) state.sheets[k].auto = {};
+  return state.sheets[k];
+}
+const holidays = ()=> state.holiday[ym()] || (state.holiday[ym()] = []);
+const workdays = ()=> state.workday[ym()] || (state.workday[ym()] = []);
+
+function isHoliday(d){ return holidays().includes(d); }
+function isClosed(d){
+  if(workdays().includes(d)) return false;
+  return isHoliday(d) || state.weekOff.includes(weekdayOf(d));
+}
+function toggleDay(d){
+  const h = holidays(), w = workdays();
+  const hi = h.indexOf(d), wi = w.indexOf(d);
+  if(isClosed(d)){
+    // открываем день
+    if(hi>=0) h.splice(hi,1);
+    if(state.weekOff.includes(weekdayOf(d)) && wi<0) w.push(d);
+  }else{
+    // закрываем день
+    if(wi>=0) w.splice(wi,1);
+    if(!state.weekOff.includes(weekdayOf(d)) && hi<0) h.push(d);
+  }
+}
+function closedDays(){
+  const arr=[];
+  for(let d=1; d<=daysInMonth(); d++) if(isClosed(d)) arr.push(d);
+  return arr;
+}
+function openDays(){
+  const out=[];
+  for(let d=1; d<=daysInMonth(); d++) if(!isClosed(d)) out.push(d);
+  return out;
+}
+
+/* ======================= ХРАНИЛИЩЕ ======================= */
+const KEY = 'randomactivity:v1';
+const BKEY = 'randomactivity:lastbackup';
+let storageOK = null;      // null — ещё не проверяли
+const store = {
+  async get(){
+    try{ if(window.storage){ const r = await window.storage.get(KEY); if(r && r.value) return r.value; } }catch(e){}
+    try{ return localStorage.getItem(KEY); }catch(e){ return null; }
+  },
+  async set(v){
+    let ok = false;
+    try{ if(window.storage){ await window.storage.set(KEY, v); ok = true; } }catch(e){}
+    try{ localStorage.setItem(KEY, v); ok = true; }catch(e){}
+    if(!ok && storageOK !== false){ storageOK = false; showStorageWarning(); }
+    return ok;
+  }
+};
+
+// проверяем, разрешает ли браузер хранить данные в этом режиме открытия
+function checkStorage(){
+  try{
+    const probe = '__ra_probe__';
+    localStorage.setItem(probe, '1');
+    const back = localStorage.getItem(probe);
+    localStorage.removeItem(probe);
+    storageOK = (back === '1');
+  }catch(e){ storageOK = false; }
+  if(!storageOK) showStorageWarning();
+  return storageOK;
+}
+
+function showStorageWarning(){
+  const box = document.getElementById('warnBox');
+  if(!box || box.dataset.shown) return;
+  box.dataset.shown = '1';
+  box.innerHTML = '<b>Браузер не сохраняет данные</b>' +
+    '<span>В этом режиме открытия месяцы пропадут после закрытия приложения. ' +
+    'Работать можно, но обязательно сохраняй файл через «Ещё» → «Сохранить всё в файл». ' +
+    'Надёжнее открыть файл в Firefox или поставить приложение по ссылке.</span>';
+  box.classList.add('show');
+}
+
+/* ---- напоминание о резервной копии ---- */
+function daysSinceBackup(){
+  try{
+    const t = parseInt(localStorage.getItem(BKEY) || '0', 10);
+    if(!t) return null;
+    return Math.floor((Date.now() - t) / 86400000);
+  }catch(e){ return null; }
+}
+function markBackup(){
+  try{ localStorage.setItem(BKEY, String(Date.now())); }catch(e){}
+  drawBackupHint();
+}
+function drawBackupHint(){
+  const el = document.getElementById('bkHint');
+  if(!el) return;
+  if(storageOK === false){ el.textContent = ''; return; }
+  const dd = daysSinceBackup();
+  let months = 0;
+  try{ months = monthKeys().length; }catch(e){}
+  if(dd === null && months > 0){
+    el.innerHTML = 'Копия ни разу не сохранялась. <button class="link" id="bkNow">Сохранить сейчас</button>';
+  }else if(dd !== null && dd >= 14){
+    el.innerHTML = 'Последняя копия — '+dd+' дн. назад. <button class="link" id="bkNow">Сохранить сейчас</button>';
+  }else if(dd !== null){
+    el.textContent = 'Резервная копия сохранена '+(dd===0 ? 'сегодня' : dd+' дн. назад')+'.';
+  }else{
+    el.textContent = '';
+  }
+  const b = document.getElementById('bkNow');
+  if(b) b.onclick = ()=>document.getElementById('mJson').click();
+}
+let saveTimer=null;
+function save(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{ store.set(JSON.stringify(state)); }, 400);
+}
+async function load(){
+  try{
+    const raw = await store.get();
+    if(raw){
+      const s = JSON.parse(raw);
+      if(s && s.sheets){
+        state = Object.assign(state, s);
+        if(!state.holiday) state.holiday = {};
+        if(!state.workday) state.workday = {};
+        // старый формат: закрытые дни лежали одним списком
+        for(const k in (state.closed||{})){
+          if(state.holiday[k]) continue;
+          const [yy,mm] = k.split('-').map(Number);
+          const dim = new Date(yy, mm, 0).getDate();
+          const wof = dd => (new Date(yy, mm-1, dd).getDay()+6)%7;
+          const list = state.closed[k] || [];
+          state.holiday[k] = list.filter(dd=>!state.weekOff.includes(wof(dd)));
+          const open = [];
+          for(let dd=1; dd<=dim; dd++) if(state.weekOff.includes(wof(dd)) && !list.includes(dd)) open.push(dd);
+          state.workday[k] = open;
+        }
+        state.closed = {};
+      }
+    }
+  }catch(e){}
+}
+
+/* ======================= МАТЕМАТИКА РАСПРЕДЕЛЕНИЯ ======================= */
+function rnd(a,b){ return a + Math.random()*(b-a); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+// Разложить `total` по весам так, чтобы сумма целых частей была ровно total
+function apportion(weights, total){
+  const n = weights.length;
+  const res = new Array(n).fill(0);
+  if(n===0 || total<=0) return res;
+  let sum = weights.reduce((a,b)=>a+Math.max(0,b),0);
+  if(sum<=0){ weights = weights.map(()=>1); sum = n; }
+  const raw = weights.map(w=>Math.max(0,w)/sum*total);
+  let acc = 0;
+  raw.forEach((v,i)=>{ res[i]=Math.floor(v); acc+=res[i]; });
+  const order = raw.map((v,i)=>({i, f:v-Math.floor(v)})).sort((a,b)=>b.f-a.f);
+  let rest = total-acc, p = 0;
+  while(rest>0 && order.length){ res[order[p%order.length].i]++; rest--; p++; }
+  return res;
+}
+
+// Ровное «живое» распределение: похоже на реальную посещаемость
+function spreadSmooth(total, n, caps){
+  if(n<=0 || total<=0) return new Array(Math.max(n,0)).fill(0);
+  const avg = total/n;
+  const boost = 1 + Math.min(3, 16/Math.max(avg,1));   // мелкие числа гуляют сильнее
+  const amp = Math.min(0.5, state.spread*boost);
+  const ph = Math.random()*6.283, freq = rnd(1.2, 2.4);
+  const w = [];
+  for(let i=0;i<n;i++){
+    let v = 1 + (Math.random()*2-1)*amp;          // случайный шум
+    v *= 1 + 0.06*Math.sin(ph + i/n*6.283*freq);  // мягкая волна по месяцу
+    w.push(Math.max(0.15, v));
+  }
+  let res = apportion(w, total);
+  if(caps) res = applyCaps(res, caps);
+  return res;
+}
+
+// Перелить лишнее с дней, где превышен лимит, на дни со свободным местом
+function applyCaps(res, caps){
+  for(let it=0; it<60; it++){
+    let over = 0;
+    for(let i=0;i<res.length;i++){ if(res[i]>caps[i]){ over += res[i]-caps[i]; res[i]=caps[i]; } }
+    if(over<=0) break;
+    const slack = res.map((v,i)=>Math.max(0, caps[i]-v));
+    const free = slack.reduce((a,b)=>a+b,0);
+    if(free<=0) break;
+    const add = apportion(slack, Math.min(over, free));
+    res = res.map((v,i)=>v+add[i]);
+    if(over>free) break;
+  }
+  return res;
+}
+
+// Разрежённое распределение: маленькие рубрики стоят не каждый день
+function spreadSparse(total, n, wide){
+  const res = new Array(n).fill(0);
+  if(n<=0 || total<=0) return res;
+  const avg = total/n;
+  let dens = avg>=6 ? 0.95 : avg>=3 ? 0.85 : avg>=1.5 ? 0.65 : avg>=0.6 ? 0.45 : 0.28;
+  if(wide) dens = Math.min(dens, 0.82);
+  let k = Math.max(1, Math.min(n, Math.round(n*dens)));
+  if(k>total) k = total;
+  const idx = shuffle([...Array(n).keys()]).slice(0,k);
+  const lo = wide?0.15:0.5, hi = wide?2.2:1.6;
+  const w = idx.map(()=>rnd(lo,hi));
+  const vals = apportion(w, total-k).map(v=>v+1);
+  idx.forEach((d,j)=>{ res[d]=vals[j]; });
+  return res;
+}
+
+/* ======================= АВТОПОДБОР СТРОКИ «ЗА МЕСЯЦ» ======================= */
+// то, что вписано руками, не трогаем; всё пустое (или подобранное раньше) считаем заново
+function autoPlan(id){
+  const def = sheetDef(id), d = data(id), p = PROFILE[id];
+  const grand = num(d.plan.tot);
+  if(grand<=0 || !p) return;
+
+  const cats = def.cols.filter(c=>c.k===CAT && !c.lock && !c.dom);
+  let fixed = 0; const free = [];
+  cats.forEach(c=>{
+    const v = num(d.plan[c.id]);
+    if(v>0 && !d.auto[c.id]) fixed += v; else if(p.cats[c.id]) free.push(c); else d.plan[c.id]='';
+  });
+  const vals = {}; let extra = 0;
+  free.forEach(c=>{
+    let v = Math.round(grand * p.cats[c.id] * rnd(0.65,1.4));
+    if(v<1 && grand*p.cats[c.id] >= 0.4) v = 1;
+    vals[c.id] = Math.max(0, v); extra += vals[c.id];
+  });
+  const cap = Math.floor(grand*0.55);          // главная рубрика не должна усохнуть
+  if(fixed+extra > cap && extra>0){
+    const k = Math.max(0, cap-fixed)/extra;
+    free.forEach(c=>{ vals[c.id] = Math.floor(vals[c.id]*k); });
+  }
+  free.forEach(c=>{ d.plan[c.id] = vals[c.id] || ''; d.auto[c.id] = true; });
+
+  // периодика, краеведение и ВСО — только руками: чистим то, что подобралось автоматом раньше
+  def.cols.filter(c=>c.k===SUB && !c.lock).forEach(c=>{
+    if(d.auto[c.id]){ d.plan[c.id] = ''; delete d.auto[c.id]; }
+  });
+}
+
+// молодёжный итог, если он не задан руками
+function autoYouthTotal(id){
+  const d = data(id), a = num(data(groupOf(id)[0]).plan.tot);
+  if(a<=0) return;
+  if(num(d.plan.tot)>0 && !d.auto.tot) return;
+  const sh = YOUTH_SHARE[id];
+  d.plan.tot = Math.max(1, Math.round(a * rnd(sh[0], sh[1])));
+  d.auto.tot = true;
+}
+
+// периодика, краеведение и ВСО у молодёжи — доля от числа, которое стоит в общем листе
+function autoOwnTotals(part){
+  const [main, s1, s2] = GROUPS[part];
+  const a = data(main);
+  sheetDef(main).cols.filter(c=>c.own && c.k!==TOT).forEach(col=>{
+    const base = num(a.plan[col.id]);
+    const got = {};
+    [s1,s2].forEach(id=>{
+      const d = data(id);
+      if(!sheetDef(id).cols.some(c=>c.id===col.id)) return;
+      if(num(d.plan[col.id])>0 && !d.auto[col.id]){ got[id] = num(d.plan[col.id]); return; }
+      if(base<=0){ d.plan[col.id]=''; delete d.auto[col.id]; got[id]=0; return; }
+      const sh = OWN_SHARE[id];
+      got[id] = Math.round(base * rnd(sh[0], sh[1]));
+    });
+    // вместе не больше, чем в общем листе
+    let over = (got[s1]||0) + (got[s2]||0) - base;
+    if(over>0){ const cut = Math.min(over, got[s2]||0); got[s2] -= cut; over -= cut; if(over>0) got[s1] = Math.max(0, got[s1]-over); }
+    [s1,s2].forEach(id=>{
+      const d = data(id);
+      if(!(id in got)) return;
+      if(num(d.plan[col.id])>0 && !d.auto[col.id]) return;
+      d.plan[col.id] = got[id] || '';
+      if(got[id]) d.auto[col.id] = true; else delete d.auto[col.id];
+    });
+  });
+}
+
+/* ======================= РАНДОМИЗАЦИЯ ЛИСТА ======================= */
+// Разложить total по дням, не превышая caps[i] в каждом дне. Сумма точная (если хватает места).
+function spreadCapped(total, caps, sparse){
+  const n = caps.length, res = new Array(n).fill(0);
+  if(total<=0 || n===0) return res;
+  const open = []; for(let i=0;i<n;i++) if(caps[i]>0) open.push(i);
+  if(!open.length) return res;
+  const room = open.reduce((a,i)=>a+caps[i],0);
+  const t = Math.min(total, room);
+
+  const w = new Array(n).fill(0);
+  if(sparse){
+    const avg = t/open.length;
+    const dens = avg>=6 ? 0.9 : avg>=3 ? 0.8 : avg>=1.5 ? 0.6 : avg>=0.6 ? 0.42 : 0.26;
+    let k = Math.max(1, Math.min(open.length, Math.round(open.length*dens)));
+    if(k>t) k = t;
+    shuffle(open.slice()).slice(0,k).forEach(i=>{ w[i]=rnd(0.5,1.7); });
+  }else{
+    const amp = Math.min(0.5, state.spread*(1+Math.min(3, 16/Math.max(t/open.length,1))));
+    open.forEach(i=>{ w[i] = Math.max(0.15, 1+(Math.random()*2-1)*amp); });
+  }
+  if(w.reduce((a,b)=>a+b,0)<=0) open.forEach(i=>{ w[i]=1; });
+
+  let r = applyCaps(apportion(w, t), caps);
+  let miss = t - r.reduce((a,b)=>a+b,0);
+  for(let it=0; it<40 && miss>0; it++){
+    const slack = r.map((v,i)=>Math.max(0, caps[i]-v));
+    const free = slack.reduce((a,b)=>a+b,0);
+    if(free<=0) break;
+    const add = apportion(slack, Math.min(miss, free));
+    r = r.map((v,i)=>v+add[i]);
+    miss = t - r.reduce((a,b)=>a+b,0);
+  }
+  return r;
+}
+
+// досыпать недостающие книги в те клетки, где ещё есть запас
+function fillDeficit(rows, cols, caps, need){
+  let guard = 0;
+  while(need>0 && guard++<300){
+    const slots = [];
+    cols.forEach(c=>{
+      const cap = caps[c.id] || [];
+      cap.forEach((lim,i)=>{ const free = lim - num(rows[i][c.id]); if(free>0) slots.push({c:c.id, i, free}); });
+    });
+    if(!slots.length) break;
+    shuffle(slots);
+    const step = Math.max(1, Math.ceil(need/Math.max(1, Math.round(slots.length/3))));
+    for(const s of slots){
+      if(need<=0) break;
+      const add = Math.min(s.free, step, need);
+      rows[s.i][s.c] = num(rows[s.i][s.c]) + add;
+      need -= add;
+    }
+  }
+  return need;
+}
+
+// caps — объект {столбец: [лимит на каждый рабочий день]} для молодёжных листов, либо null
+function randomizeSheet(id, caps){
+  const def = sheetDef(id), d = data(id);
+  const days = openDays(), n = days.length;
+  if(n===0) return {ok:false, msg:'В этом месяце не отмечено ни одного рабочего дня.'};
+
+  const cats = def.cols.filter(c=>c.k===CAT && !c.lock);
+  const dom  = cats.find(c=>c.dom);
+  const subs = def.cols.filter(c=>c.k===SUB && !c.lock);
+  const keepS = d.days.S;
+  d.days = {};
+  if(keepS) d.days.S = keepS;
+  const rows = days.map(()=>({}));
+  const short = [];
+  const put = (c, arr)=>{ arr.forEach((v,i)=>{ if(v) rows[i][c.id]=v; }); return arr.reduce((a,b)=>a+b,0); };
+  const FREE = new Array(n).fill(999999);
+  const room = c => (caps && caps[c.id]) ? caps[c.id] : FREE;
+
+  /* ===== ЛИСТ БЕЗ РУБРИК (Часть 1): каждый столбец сам по себе ===== */
+  if(!cats.length){
+    const cols = def.cols.filter(c=>!c.lock && c.k!==YEAR && c.k!==MIR && c.k!==CALC);
+    let any = false;
+    cols.forEach(c=>{
+      const t = num(d.plan[c.id]);
+      if(t<=0) return;
+      any = true;
+      const avg = t/n;
+      const got = put(c, spreadCapped(t, room(c), avg < 2.2));
+      if(got < t) short.push('«'+c.l+'»: влезло '+got+' из '+t);
+    });
+    if(!any) return {ok:false, msg:'Впиши свои числа в строку «за мес.» — рандомизируются только заполненные столбцы.'};
+    rows.forEach(r=>applyDerived(def, r));
+    days.forEach((day,i)=>{ d.days[day]=rows[i]; });
+    return {ok:true, totals:days.map((day,i)=>num(rows[i].tot)), days,
+            warn: short.length ? 'Лист «'+def.tab+'»: не хватило места — '+short.join('; ')+'.' : ''};
+  }
+
+  /* ===== ЛИСТ С РУБРИКАМИ (Часть 2) ===== */
+  const os   = cats.filter(c=>!c.dom).reduce((s,c)=>s+num(d.plan[c.id]),0);
+  const grand = num(d.plan.tot) || cats.reduce((s,c)=>s+num(d.plan[c.id]),0);
+  const detailed = os>0 || num(d.plan[dom.id])>0;
+  if(grand<=0) return {ok:false, msg:'Впиши итог в строку «за месяц» — хотя бы «Всего выдано».'};
+  if(os>grand) return {ok:false, msg:'Сумма рубрик ('+os+') больше итога ('+grand+'). Поправь строку «за месяц».'};
+
+  if(!caps){
+    if(detailed){
+      const smallSum = new Array(n).fill(0);
+      cats.filter(c=>!c.dom).forEach(c=>{
+        const arr = spreadSparse(num(d.plan[c.id]), n);
+        arr.forEach((v,i)=>{ if(v) rows[i][c.id]=v; smallSum[i]+=v; });
+      });
+      let D = spreadSmooth(grand, n);
+      let H = D.map((v,i)=>v-smallSum[i]), debt=0;
+      H = H.map(v=>{ if(v<0){ debt += -v; return 0; } return v; });
+      while(debt>0){
+        const pool = H.map((v,i)=>({v,i})).filter(o=>o.v>0).sort((a,b)=>b.v-a.v);
+        if(!pool.length) break;
+        for(const o of pool){ if(debt<=0) break; const t=Math.min(o.v, Math.max(1, Math.ceil(debt/pool.length))); H[o.i]-=t; debt-=t; }
+      }
+      D = H.map((v,i)=>v+smallSum[i]);
+      H.forEach((v,i)=>{ if(v) rows[i][dom.id]=v; });
+      D.forEach((v,i)=>{ rows[i].tot=v; });
+    }else{
+      spreadSmooth(grand, n).forEach((v,i)=>{ rows[i].tot=v; });
+    }
+    const live = []; rows.forEach((r,i)=>{ if(num(r.tot)>0) live.push(i); });
+    const pool = live.length ? live : rows.map((_,i)=>i);
+    subs.forEach(c=>{
+      const t = num(d.plan[c.id]);
+      if(t<=0) return;
+      spreadSparse(t, pool.length, true).forEach((v,j)=>{ if(v) rows[pool[j]][c.id]=v; });
+    });
+  }else{
+    const totRoom = room({id:'tot'}).reduce((a,b)=>a+b,0);
+    if(grand>totRoom) return {ok:false, msg:'Итог '+grand+' больше свободного остатка общего листа ('+totRoom+'). Уменьши число.'};
+
+    if(detailed){
+      const others = cats.filter(c=>!c.dom);
+      others.forEach(c=>{
+        const t = num(d.plan[c.id]);
+        if(t>0) put(c, spreadCapped(t, room(c), true));
+      });
+      let placed = 0;
+      rows.forEach(r=>{ others.forEach(c=>{ placed += num(r[c.id]); }); });
+      put(dom, spreadCapped(Math.max(0, grand-placed), room(dom), false));
+
+      let got = rows.reduce((a,r)=>a+cats.reduce((sm,c)=>sm+num(r[c.id]),0), 0);
+      let need = grand - got;
+      if(need>0) need = fillDeficit(rows, [dom], caps, need);
+      if(need>0) need = fillDeficit(rows, others, caps, need);
+      if(need>0) short.push('не поместилось '+need+' кн.');
+
+      rows.forEach(r=>{ r.tot = cats.reduce((sm,c)=>sm+num(r[c.id]),0) || ''; });
+
+      others.forEach(c=>{
+        const sum = rows.reduce((a,r)=>a+num(r[c.id]),0);
+        const was = num(d.plan[c.id]);
+        if(was!==sum && was>0 && !d.auto[c.id]) short.push('«'+c.l+'» → '+sum+' вместо '+was);
+        d.plan[c.id] = sum || '';
+      });
+    }else{
+      spreadCapped(grand, room({id:'tot'}), false).forEach((v,i)=>{ rows[i].tot=v; });
+    }
+    subs.forEach(c=>{
+      const t = num(d.plan[c.id]);
+      if(t<=0) return;
+      const lim = room(c).map((v,i)=>Math.min(v, num(rows[i].tot)||0 ? v : 0));
+      const got = put(c, spreadCapped(t, lim, true));
+      if(got < t) short.push('«'+c.l+'»: влезло '+got+' из '+t);
+    });
+  }
+
+  rows.forEach(r=>applyDerived(def, r));
+  days.forEach((day,i)=>{ d.days[day]=rows[i]; });
+  return {ok:true, totals:days.map((day,i)=>num(rows[i].tot)), days,
+          warn: short.length ? 'Лист «'+def.tab+'»: в общем листе не хватило места — '+short.join('; ')+'.' : ''};
+}
+
+function randomizeAll(part){
+  const [main, a1, a2] = GROUPS[part];
+  const mainDef = sheetDef(main);
+  const hasCats = mainDef.cols.some(c=>c.k===CAT && !c.lock);
+
+  if(!hasCats){
+    // Часть 1: считаем только то, что вписано руками; ничего не подбираем
+    const filled = mainDef.cols.some(c=>!c.lock && num(data(main).plan[c.id])>0);
+    if(!filled) return {ok:false, msg:'Впиши свои числа в строку «за мес.» общего листа — по ним и пойдёт расчёт.'};
+    const at = num(data(main).plan.tot);
+    const y1 = num(data(a1).plan.tot), y2 = num(data(a2).plan.tot);
+    if(at>0 && y1+y2 > at) return {ok:false, msg:'Посещения 15–17 и 18–35 вместе ('+(y1+y2)+') больше общего ('+at+').'};
+    const q1 = randomizeSheet(main);
+    if(!q1.ok) return q1;
+    [a1,a2].forEach(x=>{ const dd = data(x), keep = dd.days.S; dd.days = {}; if(keep) dd.days.S = keep; });
+    const notes = [];
+    [a1,a2].forEach(x=>{
+      // пустой молодёжный лист — это нормально, просто пропускаем
+      const has = sheetDef(x).cols.some(c=>!c.lock && num(data(x).plan[c.id])>0);
+      if(!has) return;
+      const q = randomizeSheet(x, capsFor(x));
+      if(!q.ok) notes.push('Лист «'+sheetDef(x).tab+'»: '+q.msg);
+      else if(q.warn) notes.push(q.warn);
+    });
+    return {ok:true, warn:notes.join(' ')};
+  }
+
+  if(num(data(main).plan.tot)<=0)
+    return {ok:false, msg:'Впиши общий итог за месяц в поле «Общий» — от него считается всё остальное.'};
+  autoPlan(main);
+  autoYouthTotal(a1); autoYouthTotal(a2);
+  const at = num(data(main).plan.tot);
+  const y1 = num(data(a1).plan.tot), y2 = num(data(a2).plan.tot);
+  if(y1+y2 > at) return {ok:false, msg:'15–17 и 18–35 вместе ('+(y1+y2)+') больше общего итога ('+at+').'};
+  autoPlan(a1); autoPlan(a2);
+  autoOwnTotals(part);
+
+  const r1 = randomizeSheet(main);
+  if(!r1.ok) return r1;
+  // чистим оба молодёжных листа, иначе остатки прошлого расчёта съедают место
+  [a1,a2].forEach(id=>{ const dd = data(id), keep = dd.days.S; dd.days = {}; if(keep) dd.days.S = keep; });
+  const r2 = randomizeSheet(a1, capsFor(a1));
+  if(!r2.ok) return r2;
+  const r3 = randomizeSheet(a2, capsFor(a2));
+  if(!r3.ok) return r3;
+  return {ok:true, warn:[r2.warn, r3.warn].filter(Boolean).join(' ')};
+}
+
+// сколько ещё можно взять в каждом столбце каждого дня: общий лист минус второй молодёжный
+function capsFor(id){
+  const days = openDays();
+  const g = groupOf(id), main = g[0];
+  const a = data(main), o = data(g[1]===id ? g[2] : g[1]);
+  const adef = sheetDef(main);
+  if(!days.some(dd=>num((a.days[dd]||{}).tot)>0)) return null;
+  const caps = {};
+  sheetDef(id).cols.forEach(c=>{
+    if(c.k===MIR || c.k===CALC || c.k===YEAR || c.lock) return;
+    const inAdult = adef.cols.some(x=>x.id===c.id && !x.lock && x.k!==CALC && x.k!==MIR);
+    caps[c.id] = inAdult
+      ? days.map(dd=>Math.max(0, num((a.days[dd]||{})[c.id]) - num((o.days[dd]||{})[c.id])))
+      : days.map(()=>999999);
+  });
+  return caps;
+}
+
+/* ======================= ОТРИСОВКА ======================= */
+let GEND = {}, GTONE = {};
+function render(){
+  document.getElementById('monthLabel').innerHTML = MONTHS[state.month-1]+' <span>'+state.year+'</span>';
+  document.getElementById('sheetName').textContent = sheetDef(state.active).name;
+
+  const def = sheetDef(state.active), d = data(state.active), N = daysInMonth();
+  // группы столбцов: верхний ряд шапки
+  const groups = [];
+  def.cols.forEach(c=>{
+    const g = c.g || '';
+    const last = groups[groups.length-1];
+    if(last && last.g===g) last.n++; else groups.push({g, n:1});
+  });
+
+  let h = '<table><thead><tr class="grow">';
+  h += '<th class="datehead" rowspan="2"><div class="dlabel">'+def.dateHead+'</div></th>';
+  groups.forEach((gr,gi)=>{ h += '<th class="grp'+(gi%2?' gA':'')+'" colspan="'+gr.n+'"><span>'+gr.g+'</span></th>'; });
+  h += '</tr><tr class="hrow">';
+  const gend = {}, gtone = {};
+  let gi = 0;
+  def.cols.forEach((c,i)=>{
+    const prev = def.cols[i-1];
+    if(prev && (prev.g||'')!==(c.g||'')) gi++;
+    if(gi%2) gtone[c.id]=1;
+    const nx = def.cols[i+1];
+    if(!nx || (nx.g||'')!==(c.g||'')) gend[c.id]=1;
+  });
+  GTONE = gtone;
+  def.cols.forEach(c=>{ h += '<th class="vh'+(c.lock?' lockhead':'')+(c.own?' ownhead':'')+(c.incl?' inclhead':'')+(gend[c.id]?' gend':'')+(gtone[c.id]?' gA':'')+'"><div class="rot">'+c.l+'</div></th>'; });
+  h += '</tr></thead><tbody>';
+  GEND = gend;
+
+  h += '<tr class="newmonth rowlabel"><td class="date">на нач.</td>';
+  def.cols.forEach(c=>{ h += cellTd('S', c, d.days.S ? d.days.S[c.id] : ''); });
+  h += '</tr>';
+
+  for(let day=1; day<=N; day++){
+    const off = isClosed(day);
+    h += '<tr class="'+(off?'off':'')+'" data-row="'+day+'"><td class="date"><button data-day="'+day+'">'+day+'</button></td>';
+    def.cols.forEach(c=>{ h += cellTd(day, c, (d.days[day]||{})[c.id]); });
+    h += '</tr>';
+  }
+
+  h += '<tr class="sum rowlabel"><td class="date">за мес.</td>';
+  def.cols.forEach(c=>{ h += planTd(c); });
+  h += '</tr>';
+
+  h += '<tr class="carry rowlabel"><td class="date">перенос</td>';
+  def.cols.forEach(c=>{
+    h += '<td'+(c.incl?' class="incl"':'')+'><input class="cell" inputmode="numeric" data-carry="'+c.id+'" value="'+(d.carry[c.id] ?? '')+'"></td>';
+  });
+  h += '</tr>';
+
+  h += '<tr class="sum rowlabel"><td class="date">за год</td>';
+  def.cols.forEach(c=>{ h += '<td'+(c.incl?' class="incl"':'')+'><input class="cell" readonly data-year="'+c.id+'"></td>'; });
+  h += '</tr>';
+
+  h += '</tbody></table>';
+  document.getElementById('scroll').innerHTML = h;
+  recalcAll();
+  drawTotals();
+  drawHoliBadge();
+  drawArchBadge();
+  drawBackupHint();
+}
+
+function cellTd(day, c, v){
+  const k = (c.incl?'incl ':'')+(GTONE[c.id]?'gA ':'')+(GEND[c.id]?'gend':'');
+  const cls = k.trim() ? ' class="'+k.trim()+'"' : '';
+  if(c.lock) return '<td'+cls+'><input class="cell lock" readonly tabindex="-1" data-d="'+day+'" data-c="'+c.id+'" value=""></td>';
+  const ro = (c.k===MIR || c.k===CALC || c.k===YEAR) ? ' readonly' : '';
+  return '<td'+cls+'><input class="cell" inputmode="numeric"'+ro+' data-d="'+day+'" data-c="'+c.id+'" value="'+(v ?? '')+'"></td>';
+}
+function planTd(c){
+  const d = data(state.active);
+  const k = (c.incl?'incl ':'')+(GTONE[c.id]?'gA ':'')+(GEND[c.id]?'gend':'');
+  const cls = k.trim() ? ' class="'+k.trim()+'"' : '';
+  if(c.lock) return '<td'+cls+'><input class="cell lock" readonly tabindex="-1" data-plan="'+c.id+'" value=""></td>';
+  if(c.k===YEAR || c.k===CALC) return '<td'+cls+'><input class="cell" readonly data-plan="'+c.id+'"></td>';
+  return '<td'+cls+'><input class="cell plan'+(c.own?' own':'')+'" inputmode="numeric" data-plan="'+c.id+'" value="'+(d.plan[c.id] ?? '')+'"></td>';
+}
+
+/* ---- пересчёт строк, итогов и подсветки ---- */
+// зеркала и вычисляемые столбцы одной строки
+function applyDerived(def, row){
+  for(let pass=0; pass<3; pass++){
+    def.cols.filter(c=>c.k===MIR).forEach(c=>{ row[c.id] = num(row[c.of||'tot']) || ''; });
+    def.cols.filter(c=>c.k===CALC).forEach(c=>{
+      row[c.id] = c.of.reduce((sm,x)=>sm+num(row[x]),0) || '';
+    });
+  }
+}
+
+function setDayCell(day, col, val){
+  const el = document.querySelector('input[data-d="'+day+'"][data-c="'+col+'"]');
+  if(el && el!==document.activeElement) el.value = val ? val : '';
+}
+// «Всего выдано» — главное число строки; главная рубрика добирает остаток
+function recalcRow(day, edited){
+  const def = sheetDef(state.active), d = data(state.active);
+  const row = d.days[day] || (d.days[day] = {});
+  const cats = def.cols.filter(c=>c.k===CAT && !c.lock);
+  const dom = cats.find(c=>c.dom);
+  if(!dom){ applyDerived(def, row); def.cols.filter(c=>c.k===MIR||c.k===CALC).forEach(c=>setDayCell(day, c.id, row[c.id])); return; }
+  const os = cats.filter(c=>!c.dom).reduce((s,c)=>s+num(row[c.id]),0);
+  const domVal = num(row[dom.id]);
+  const domActive = domVal>0 || os>0;
+
+  if(edited===dom.id || (!edited && domActive)){
+    row.tot = os + domVal;
+  }else if(edited && domActive){
+    const t = num(row.tot);
+    if(edited==='tot' && t===0){
+      cats.forEach(c=>{ row[c.id]=''; setDayCell(day, c.id, ''); });
+      row.tot = '';
+    }else if(t>0){
+      const nd = t - os;
+      if(nd>=0){ row[dom.id] = nd || ''; setDayCell(day, dom.id, row[dom.id]); }
+      else { row.tot = os; row[dom.id] = ''; setDayCell(day, dom.id, ''); }
+    }else row.tot = os + domVal;
+  }
+  setDayCell(day, 'tot', row.tot);
+  applyDerived(def, row);
+  def.cols.filter(c=>c.k===MIR || c.k===CALC).forEach(c=>{ setDayCell(day, c.id, row[c.id]); });
+}
+
+let planWarn = 0;
+function recalcAll(editKind, editCol, editDay){
+  const def = sheetDef(state.active), d = data(state.active);
+  const cats = def.cols.filter(c=>c.k===CAT && !c.lock);
+  const dom = cats.find(c=>c.dom);
+  const N = daysInMonth();
+
+  const locked = def.cols.filter(c=>c.lock);
+  locked.forEach(c=>{ d.plan[c.id] = ''; });
+  Object.keys(d.days).forEach(k=>{ locked.forEach(c=>{ if(d.days[k]) d.days[k][c.id] = ''; }); });
+
+  for(let day=1; day<=N; day++) if(!isClosed(day))
+    recalcRow(day, (editKind==='day' && String(day)===String(editDay)) ? editCol : null);
+
+  // фактические суммы столбцов
+  const fact = {};
+  def.cols.forEach(c=>{
+    let s = 0;
+    for(let day=1; day<=N; day++) if(!isClosed(day)) s += num((d.days[day]||{})[c.id]);
+    fact[c.id] = s;
+  });
+
+  // строка «за месяц»: «Всего выдано» — главное число, худож. литература добирает остаток
+  const pe = editKind==='plan' ? editCol : null;
+  const pos = dom ? cats.filter(c=>!c.dom).reduce((s,c)=>s+num(d.plan[c.id]),0) : 0;
+  const pdom = dom ? num(d.plan[dom.id]) : 0;
+  const pActive = dom && (pdom>0 || pos>0);
+  planWarn = 0;
+  if(dom && (pe===dom.id || (!pe && pActive && !num(d.plan.tot)))){
+    d.plan.tot = pos + pdom;
+  }else if(dom && pActive){
+    const t = num(d.plan.tot);
+    if(t>0){
+      const nd = t - pos;
+      if(nd>=0) d.plan[dom.id] = nd || '';
+      else planWarn = pos - t;
+    }else d.plan.tot = pos + pdom;
+  }
+  applyDerived(def, d.plan);
+  def.cols.forEach(c=>{
+    if(c.k===YEAR || c.lock) return;
+    const el = document.querySelector('input[data-plan="'+c.id+'"]');
+    if(!el) return;
+    const auto = (c.k===MIR) || (c.k===CALC) || (dom && c.id===dom.id && pos>0);
+    el.readOnly = auto;
+    el.classList.toggle('auto', auto);
+    el.classList.toggle('plan', !auto);
+    el.classList.toggle('own', !!c.own);
+    el.classList.toggle('autoval', !auto && !!d.auto[c.id] && num(d.plan[c.id])>0);
+    if(el!==document.activeElement) el.value = d.plan[c.id] ? d.plan[c.id] : '';
+  });
+
+  // подсветка расхождений план ↔ факт
+  def.cols.forEach(c=>{
+    const el = document.querySelector('input[data-plan="'+c.id+'"]');
+    if(!el || c.k===YEAR) return;
+    const p = num(d.plan[c.id]);
+    el.classList.toggle('bad', p>0 && fact[c.id]>0 && p!==fact[c.id]);
+  });
+
+  // «за год» = перенос + факт месяца
+  def.cols.forEach(c=>{
+    const el = document.querySelector('input[data-year="'+c.id+'"]');
+    if(!el) return;
+    const base = num(d.carry[c.id]);
+    const v = base + (c.k===YEAR ? 0 : fact[c.id]);
+    el.value = v ? v : '';
+  });
+
+  checkStatus(fact);
+  save();
+}
+
+/* ---- проверка сходимости ---- */
+function checkStatus(fact){
+  const box = document.getElementById('status');
+  const msgs = [];
+  const def = sheetDef(state.active), d = data(state.active);
+  const N = daysInMonth();
+
+  if(planWarn) msgs.push(['warn','Рубрики в строке «за месяц» перебрали итог на '+planWarn+'. Уменьши их или подними «Всего выдано».']);
+
+  def.cols.forEach(c=>{
+    if(c.k===YEAR) return;
+    const p = num(d.plan[c.id]), f = fact[c.id];
+    if(p>0 && f>0 && p!==f) msgs.push(['warn', '«'+c.l+'»: план '+p+', в днях '+f+' (разница '+(f-p)+')']);
+  });
+
+  // молодёжь не должна превышать общий лист — ни в одной клетке, ни в одном столбце
+  const g = groupOf(state.active);
+  const a = data(g[0]), y15 = data(g[1]), y35 = data(g[2]);
+  const adef = sheetDef(g[0]);
+  let over = 0, firstDay = null, firstCol = '';
+  adef.cols.forEach(c=>{
+    if(c.k===MIR || c.k===CALC || c.k===YEAR || c.lock) return;
+    for(let day=1; day<=N; day++){
+      if(isClosed(day)) continue;
+      const av = num((a.days[day]||{})[c.id]);
+      const yv = num((y15.days[day]||{})[c.id]) + num((y35.days[day]||{})[c.id]);
+      if(yv>av){ over++; if(!firstDay){ firstDay = day; firstCol = c.l; } }
+    }
+  });
+  if(over) msgs.push(['warn','Молодёжь превышает общий лист в '+over+' кл. (первая — '+firstDay+' число, «'+firstCol+'»). Нажми «Рандомизировать».']);
+
+  const sumAdult = sumMonth(g[0],'tot'), sumY = sumMonth(g[1],'tot')+sumMonth(g[2],'tot');
+  if(sumAdult>0 && sumY>sumAdult) msgs.push(['warn','За месяц молодёжь ('+sumY+') больше общего итога ('+sumAdult+').']);
+
+  if(!msgs.length){
+    const t = fact.tot||0;
+    msgs.push(['good', t ? 'Всё сходится. Итог за месяц: '+t+'.' : 'Лист пустой — впиши план и жми «Рандомизировать».']);
+  }
+  box.innerHTML = msgs.map(m=>'<div class="msg '+m[0]+'">'+m[1]+'</div>').join('');
+}
+function sumMonth(id, col){
+  const d = data(id); let s = 0;
+  for(let day=1; day<=daysInMonth(); day++) if(!isClosed(day)) s += num((d.days[day]||{})[col]);
+  return s;
+}
+
+/* ======================= СОБЫТИЯ ======================= */
+document.getElementById('scroll').addEventListener('input', e=>{
+  const el = e.target;
+  if(!el.classList.contains('cell')) return;
+  const d = data(state.active);
+  if(el.dataset.d !== undefined){
+    const day = el.dataset.d === 'S' ? 'S' : num(el.dataset.d);
+    (d.days[day] || (d.days[day]={}))[el.dataset.c] = num(el.value) || '';
+    if(day!=='S') recalcRow(day, el.dataset.c);
+    recalcAll('day', el.dataset.c, day);
+  }else if(el.dataset.plan){
+    d.plan[el.dataset.plan] = num(el.value) || '';
+    delete d.auto[el.dataset.plan];
+    recalcAll('plan', el.dataset.plan);
+    drawTotals();
+  }else if(el.dataset.carry){
+    d.carry[el.dataset.carry] = num(el.value) || '';
+    recalcAll();
+  }else recalcAll();
+});
+
+document.getElementById('scroll').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-day]');
+  if(!b) return;
+  toggleDay(num(b.dataset.day));
+  render(); drawHoliBadge(); save();
+});
+
+document.getElementById('tabs').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-sheet]');
+  if(!b) return;
+  state.active = b.dataset.sheet;
+  state.activeOf[state.part] = state.active;
+  drawTabs(); render(); save();
+});
+
+document.getElementById('parts').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-part]');
+  if(!b) return;
+  state.part = num(b.dataset.part);
+  state.active = state.activeOf[state.part] || GROUPS[state.part][0];
+  drawParts(); drawTabs(); drawTotals(); render(); save();
+});
+
+function drawParts(){
+  [...document.querySelectorAll('#parts button')].forEach(b=>{
+    b.setAttribute('aria-selected', num(b.dataset.part)===state.part);
+  });
+  document.getElementById('btnRnd').textContent = 'Рандомизировать часть '+state.part;
+  document.getElementById('tAdult').placeholder = state.part===1 ? '1719' : '3048';
+  document.getElementById('sheetHint').textContent = state.part===1
+    ? 'Все столбцы свои: вписываешь итог — он раскидывается по дням'
+    : 'Фиолетовые столбцы — только твои числа, остальное подберётся само';
+}
+
+document.getElementById('prevM').onclick = ()=>{ state.month--; if(state.month<1){state.month=12; state.year--;} render(); drawTotals(); drawHoliBadge(); save(); };
+document.getElementById('nextM').onclick = ()=>{ state.month++; if(state.month>12){state.month=1; state.year++;} render(); drawTotals(); drawHoliBadge(); save(); };
+document.getElementById('spread').onchange = e=>{ state.spread = parseFloat(e.target.value); save(); };
+
+document.getElementById('btnRnd').onclick = ()=>{ finish(randomizeAll(state.part)); };
+
+function finish(r){
+  if(!r.ok){
+    document.getElementById('status').innerHTML = '<div class="msg warn">'+r.msg+'</div>';
+    return;
+  }
+  render();
+  if(r.warn){
+    const box = document.getElementById('status');
+    box.innerHTML = '<div class="msg warn">'+r.warn+'</div>' + box.innerHTML;
+  }
+  if(!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
+    const cells = [...document.querySelectorAll('input.cell[data-d]')].filter(c=>c.value);
+    cells.forEach((c,i)=>setTimeout(()=>c.classList.add('ink'), Math.min(i*4, 420)));
+  }
+}
+
+/* ---- выходные дни недели ---- */
+function drawWeekdays(){
+  document.getElementById('weekdays').innerHTML = WD.map((w,i)=>
+    '<button class="wd" data-wd="'+i+'" aria-pressed="'+state.weekOff.includes(i)+'">'+w+'</button>').join('');
+}
+document.getElementById('weekdays').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-wd]');
+  if(!b) return;
+  const i = num(b.dataset.wd), k = state.weekOff.indexOf(i);
+  if(k>=0) state.weekOff.splice(k,1); else state.weekOff.push(i);
+  drawWeekdays(); drawHoliBadge(); render(); save();
+});
+
+const TOTAL_FIELDS = ['tAdult','tY15','tY35'];
+const fieldSheet = i => GROUPS[state.part][i];
+function drawTotals(){
+  TOTAL_FIELDS.forEach((el,i)=>{
+    const inp = document.getElementById(el);
+    if(!inp || inp===document.activeElement) return;
+    const d = data(fieldSheet(i)), v = d.plan.tot;
+    inp.value = v ? v : '';
+    inp.classList.toggle('autoval', !!d.auto.tot && !!v);
+  });
+}
+TOTAL_FIELDS.forEach((el,i)=>{
+  document.getElementById(el).addEventListener('input', e=>{
+    const id = fieldSheet(i), d = data(id);
+    d.plan.tot = num(e.target.value) || '';
+    delete d.auto.tot;
+    if(state.active===id) recalcAll('plan','tot'); else save();
+    drawTotals();
+  });
+});
+
+function drawTabs(){
+  document.getElementById('tabs').innerHTML = SHEETS.filter(s=>s.part===state.part).map(s=>
+    '<button data-sheet="'+s.id+'" aria-selected="'+(s.id===state.active)+'">'+s.tab+'</button>').join('');
+}
+
+/* ---- архив месяцев ---- */
+function monthKeys(){
+  const set = {};
+  for(const k in state.sheets){
+    const ymk = k.split('|')[0], d = state.sheets[k];
+    const has = Object.values(d.plan||{}).some(v=>num(v)>0) ||
+                Object.values(d.days||{}).some(r=>Object.values(r||{}).some(v=>num(v)>0));
+    if(has) set[ymk] = 1;
+  }
+  for(const k in state.holiday) if((state.holiday[k]||[]).length) set[k] = 1;
+  return Object.keys(set).sort((a,b)=>{
+    const [ay,am] = a.split('-').map(Number), [by,bm] = b.split('-').map(Number);
+    return by-ay || bm-am;
+  });
+}
+function monthTotal(ymk, id){
+  const d = state.sheets[ymk+'|'+id];
+  return d ? num((d.plan||{}).tot) : 0;
+}
+function drawArch(){
+  const keys = monthKeys(), box = document.getElementById('archList');
+  if(!keys.length){ box.innerHTML = '<div class="archempty">Пока ничего не сохранено. Заполни месяц — он появится здесь.</div>'; return; }
+  box.innerHTML = keys.map(k=>{
+    const [yy,mm] = k.split('-').map(Number);
+    const p1 = monthTotal(k,'p1adult'), p2 = monthTotal(k,'adult');
+    const bits = [];
+    if(p1) bits.push('Ч1 — '+p1+' посещ.');
+    if(p2) bits.push('Ч2 — '+p2+' выдач');
+    const cur = (yy===state.year && mm===state.month) ? ' cur' : '';
+    return '<div class="archrow'+cur+'"><div class="an"><b>'+MONTHS[mm-1]+' '+yy+'</b>'+
+      '<span>'+(bits.join('  ·  ') || 'без итогов')+'</span></div>'+
+      '<button data-open="'+k+'">Открыть</button>'+
+      '<button class="del" data-del="'+k+'">Удалить</button></div>';
+  }).join('');
+}
+function drawArchBadge(){
+  document.getElementById('btnArch').classList.toggle('has', monthKeys().length>1);
+}
+const archModal = document.getElementById('archModal');
+document.getElementById('btnArch').onclick = ()=>{ drawArch(); archModal.classList.add('open'); };
+document.getElementById('aClose').onclick = ()=>archModal.classList.remove('open');
+archModal.addEventListener('click', e=>{ if(e.target===archModal) archModal.classList.remove('open'); });
+document.getElementById('archList').addEventListener('click', e=>{
+  const op = e.target.closest('button[data-open]'), dl = e.target.closest('button[data-del]');
+  if(op){
+    const [yy,mm] = op.dataset.open.split('-').map(Number);
+    state.year = yy; state.month = mm;
+    archModal.classList.remove('open');
+    render(); drawTotals(); drawHoliBadge(); save();
+    return;
+  }
+  if(dl){
+    const k = dl.dataset.del;
+    if(dl.dataset.sure !== '1'){
+      dl.dataset.sure = '1'; dl.textContent = 'Точно?';
+      setTimeout(()=>{ if(dl.isConnected){ dl.dataset.sure=''; dl.textContent='Удалить'; } }, 4000);
+      return;
+    }
+    SHEETS.forEach(sh=>{ delete state.sheets[k+'|'+sh.id]; });
+    delete state.holiday[k]; delete state.workday[k]; delete state.closed[k];
+    drawArch(); drawArchBadge(); save();
+    const [yy,mm] = k.split('-').map(Number);
+    if(yy===state.year && mm===state.month){ render(); drawTotals(); drawHoliBadge(); }
+  }
+});
+
+/* ---- нерабочие дни ---- */
+const holiModal = document.getElementById('holiModal');
+function drawDayGrid(){
+  const N = daysInMonth();
+  let h = '';
+  for(let i=0;i<weekdayOf(1);i++) h += '<span></span>';
+  for(let d=1; d<=N; d++){
+    const st = isHoliday(d) && !workdays().includes(d) ? 'holi' : (isClosed(d) ? 'week' : 'open');
+    h += '<button data-hd="'+d+'" data-state="'+st+'">'+d+'<span class="wdn">'+WD[weekdayOf(d)]+'</span></button>';
+  }
+  document.getElementById('dayGrid').innerHTML = h;
+}
+function drawHoliBadge(){
+  const n = holidays().filter(d=>!workdays().includes(d) && d<=daysInMonth()).length;
+  document.getElementById('holiCount').textContent = n ? '· '+n : '';
+}
+document.getElementById('btnHoli').onclick = ()=>{ drawDayGrid(); holiModal.classList.add('open'); };
+document.getElementById('hClose').onclick = ()=>holiModal.classList.remove('open');
+holiModal.addEventListener('click', e=>{ if(e.target===holiModal) holiModal.classList.remove('open'); });
+document.getElementById('dayGrid').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-hd]');
+  if(!b) return;
+  toggleDay(num(b.dataset.hd));
+  drawDayGrid(); drawHoliBadge(); render(); save();
+});
+document.getElementById('hClear').onclick = ()=>{
+  holidays().length = 0;
+  drawDayGrid(); drawHoliBadge(); render(); save();
+};
+
+/* ======================= МЕНЮ ======================= */
+const modal = document.getElementById('modal');
+document.getElementById('btnMenu').onclick = ()=>modal.classList.add('open');
+document.getElementById('mClose').onclick = ()=>modal.classList.remove('open');
+modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
+
+document.getElementById('mArch').onclick = ()=>{ modal.classList.remove('open'); drawArch(); archModal.classList.add('open'); };
+document.getElementById('mExample').onclick = ()=>{
+  state.year = 2026; state.month = 8;
+  state.holiday[ym()] = [25]; state.workday[ym()] = [];
+  const ex = {
+    p1adult:{utot:61, tot:1719, amm:45, stot:1660, sbib:1615, smm:45, rem:59, etot:2, estac:1, evne:1},
+    p1y15:  {utot:10, ustac:10, tot:156, svt:147, amm:14, rem:9, stot:147, sbib:133, smm:14},
+    p1y35:  {utot:21, ustac:21, tot:127, svt:122, amm:9,  rem:5, stot:122, sbib:113, smm:9},
+    adult:  {tot:3048, opl:63, enl:64, teh:25, agr:39, art:11, spo:7, lan:10, per:237, kra:8, vso:7},
+    y15:    {tot:363,  opl:20, enl:16, teh:8,  agr:7,  art:4,  spo:4, lan:3,  per:76,  kra:3},
+    y35:    {tot:183,  opl:12, enl:20, teh:4,  agr:9,  art:3,  spo:2, lan:4,  per:70,  kra:2}
+  };
+  for(const id in ex){ const d = data(id); d.auto = {}; Object.assign(d.plan, ex[id]); }
+  modal.classList.remove('open');
+  const other = randomizeAll(state.part===1 ? 2 : 1);
+  const r = randomizeAll(state.part);
+  finish(r.ok && !other.ok ? other : r);
+};
+
+document.getElementById('mClearDays').onclick = ()=>{ data(state.active).days = {}; render(); modal.classList.remove('open'); };
+document.getElementById('mClearAll').onclick = ()=>{
+  GROUPS[state.part].forEach(id=>{ state.sheets[key(id)] = {plan:{}, days:{}, carry:{}, auto:{}}; });
+  render(); modal.classList.remove('open');
+};
+document.getElementById('mPrint').onclick = ()=>{ modal.classList.remove('open'); setTimeout(()=>window.print(), 200); };
+
+function download(name, text, type){
+  const b = new Blob([text], {type:type||'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 3000);
+}
+document.getElementById('mCsv').onclick = ()=>{
+  const def = sheetDef(state.active), d = data(state.active), N = daysInMonth();
+  const rows = [[def.dateHead, ...def.cols.map(c=>c.l)]];
+  for(let day=1; day<=N; day++){
+    if(isClosed(day)){ rows.push([day, ...def.cols.map(()=>'')]); continue; }
+    rows.push([day, ...def.cols.map(c=>(d.days[day]||{})[c.id] ?? '')]);
+  }
+  rows.push(['За месяц', ...def.cols.map(c=>d.plan[c.id] ?? '')]);
+  const csv = '\uFEFF'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n');
+  download('random-activity_ч'+def.part+'_'+def.id+'_'+state.year+'-'+state.month+'.csv', csv, 'text/csv;charset=utf-8');
+  modal.classList.remove('open');
+};
+document.getElementById('mJson').onclick = ()=>{
+  const st = new Date(), pad = n=>String(n).padStart(2,'0');
+  const name = 'random-activity_'+st.getFullYear()+'-'+pad(st.getMonth()+1)+'-'+pad(st.getDate())+'.json';
+  download(name, JSON.stringify(state), 'application/json');
+  markBackup();
+  modal.classList.remove('open');
+};
+document.getElementById('mLoad').onclick = ()=>document.getElementById('fileIn').click();
+document.getElementById('fileIn').onchange = e=>{
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ()=>{
+    try{
+      const s = JSON.parse(r.result);
+      if(s && s.sheets){ state = Object.assign(state, s); if(!state.activeOf) state.activeOf={1:'p1adult',2:'adult'};
+        state.part = sheetDef(state.active).part; drawParts(); drawTabs(); drawWeekdays(); drawHoliBadge(); render(); save(); }
+    }catch(err){
+      document.getElementById('status').innerHTML = '<div class="msg warn">Файл не читается — нужен JSON, сохранённый этим приложением.</div>';
+    }
+    modal.classList.remove('open');
+  };
+  r.readAsText(f);
+};
+
+/* ---- офлайн-режим и обновления ---- */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+// если хранить негде — напоминаем при уходе со страницы
+window.addEventListener('beforeunload', e=>{
+  if(storageOK === false && monthKeys().length){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+/* ======================= СТАРТ ======================= */
+(async ()=>{
+  checkStorage();
+  await load();
+  // при каждом запуске открываем Часть 1 и ставим «живой» разброс
+  state.part = 1;
+  state.active = (state.activeOf && state.activeOf[1]) || 'p1adult';
+  if(!SHEETS.some(x=>x.id===state.active && x.part===1)) state.active = 'p1adult';
+  state.spread = 0.16;
+  drawParts(); drawTabs(); drawWeekdays(); drawHoliBadge();
+  document.getElementById('spread').value = String(state.spread);
+  render();
+  drawBackupHint();
+})();
+</script>
