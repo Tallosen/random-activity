@@ -29,10 +29,12 @@
   --stamp-soft:#EFE8F7;
   --alert:#B0413E;
   --ok:#2E6B4F;
-  --cell:48px;
-  --dcol:38px;
-  --hh:150px;
-  --gh:22px;
+  --z:1;
+  --cell:calc(48px * var(--z));
+  --dcol:calc(38px * var(--z));
+  --hh:calc(150px * var(--z));
+  --gh:calc(22px * var(--z));
+  --rowh:calc(32px * var(--z));
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:var(--ink);color:var(--paper)}
@@ -98,6 +100,13 @@ select.mini{background:#1B2942;color:var(--paper);border:1px solid #2C3B55;borde
 
 /* ---------- лист ---------- */
 .sheetwrap{background:var(--paper);color:var(--ink);border-radius:10px 10px 0 0;margin:0 6px;padding:10px 0 0;min-height:60vh}
+.zoombar{display:flex;align-items:center;gap:6px;padding:2px 12px 8px}
+.zoombar button{background:#EFF1F5;border:1px solid var(--rule);color:var(--ink-soft);
+  border-radius:5px;padding:0;width:38px;height:32px;font-size:17px;line-height:1}
+.zoombar button.fit{width:auto;flex:0 1 auto;padding:0 12px;font-size:12px}
+.zoombar button:active{background:#E2E6ED}
+.zoombar button:disabled{opacity:.35}
+.zoombar #zVal{margin-left:auto;font-family:"PT Mono",monospace;font-size:12px;color:var(--pencil);min-width:44px;text-align:right}
 .sheettitle{padding:2px 12px 8px;display:flex;justify-content:space-between;align-items:flex-end;gap:8px;background:var(--paper);color:var(--ink)}
 .sheettitle h2{font-family:"PT Sans Narrow",sans-serif;font-size:15px;font-weight:700;margin:0;text-transform:uppercase;letter-spacing:.06em;color:var(--ink)}
 .sheettitle em{font-style:normal;font-size:11px;color:var(--pencil);text-align:right;max-width:52%}
@@ -112,7 +121,7 @@ thead th{background:var(--paper);color:var(--ink);padding:0;background-clip:padd
 /* верхний ряд — названия групп */
 tr.grow th.grp{position:sticky;top:0;z-index:22;height:var(--gh);white-space:nowrap;
   background:#F2F0EA;border-bottom:1px solid var(--rule-mid);border-right:1px solid var(--rule-mid);
-  font-family:"PT Sans Narrow","Arial Narrow",Arial,sans-serif;font-size:10.5px;font-weight:700;
+  font-family:"PT Sans Narrow","Arial Narrow",Arial,sans-serif;font-size:calc(10.5px * var(--z));font-weight:700;
   letter-spacing:.09em;text-transform:uppercase;color:#6B7789}
 tr.grow th.grp span{display:block;padding:0 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 
@@ -127,9 +136,12 @@ tr.hrow th.vh.gA{background:#F7F6F1}
 tr.grow th.grp.gA{background:#EDEBE4}
 tr.hrow th.vh{position:sticky;top:var(--gh);z-index:21;height:var(--hh);width:var(--cell);min-width:var(--cell);
   border-bottom:1px solid var(--rule-strong);vertical-align:bottom}
+html[data-tiny="1"]{--hh:calc(58px * var(--z))}
+html[data-tiny="1"] tr.hrow th.vh .rot{opacity:0}
+html[data-tiny="1"] tr.grow th.grp span{font-size:9px;letter-spacing:.02em}
 tr.hrow th.vh .rot{writing-mode:vertical-rl;transform:rotate(180deg);
-  display:block;height:var(--hh);padding:8px 3px;
-  font-family:"PT Sans Narrow","Arial Narrow",Arial,sans-serif;font-size:11px;line-height:1.15;
+  display:block;height:var(--hh);padding:calc(8px * var(--z)) calc(3px * var(--z));
+  font-family:"PT Sans Narrow","Arial Narrow",Arial,sans-serif;font-size:calc(11px * var(--z));line-height:1.15;
   color:var(--ink-soft);font-weight:400;text-align:left;white-space:normal;overflow:hidden}
 
 /* угловая ячейка «Дата» */
@@ -137,18 +149,18 @@ th.datehead{position:sticky;left:0;top:0;z-index:32;width:var(--dcol);min-width:
   background:#F2F0EA;border-bottom:1px solid var(--rule-strong);
   border-right:0;box-shadow:1px 0 0 0 var(--rule-strong);vertical-align:middle}
 th.datehead .dlabel{writing-mode:vertical-rl;transform:rotate(180deg);
-  font-family:"PT Sans Narrow","Arial Narrow",Arial,sans-serif;font-size:11px;font-weight:700;
+  font-family:"PT Sans Narrow","Arial Narrow",Arial,sans-serif;font-size:calc(11px * var(--z));font-weight:700;
   color:var(--ink);margin:0 auto;max-height:calc(var(--gh) + var(--hh) - 10px);overflow:hidden}
 
 td.date{position:sticky;left:0;z-index:15;background:#FAF9F6;background-clip:padding-box;
   width:var(--dcol);min-width:var(--dcol);
-  font-family:"PT Sans Narrow",sans-serif;font-size:13px;color:var(--pencil);height:32px;
+  font-family:"PT Sans Narrow",sans-serif;font-size:calc(13px * var(--z));color:var(--pencil);height:var(--rowh);
   border-right:0;box-shadow:1px 0 0 0 var(--rule-mid)}
-td.date button{all:unset;display:block;width:100%;height:32px;line-height:32px;font-family:inherit;font-size:13px;color:inherit}
+td.date button{all:unset;display:block;width:100%;height:var(--rowh);line-height:var(--rowh);font-family:inherit;font-size:calc(13px * var(--z));color:inherit}
 tr.off td.date button{color:var(--pencil)}
 
-input.cell{width:var(--cell);height:32px;border:0;background:transparent;text-align:center;
-  font-family:"PT Mono",monospace;font-size:16px;color:var(--pen);padding:0}
+input.cell{width:var(--cell);height:var(--rowh);border:0;background:transparent;text-align:center;
+  font-family:"PT Mono",monospace;font-size:calc(16px * var(--z));color:var(--pen);padding:0}
 input.cell:focus{outline:2px solid var(--stamp);outline-offset:-2px;background:#fff}
 input.cell[readonly]{color:var(--ink);background:#F4F6F9}
 input.cell.auto{background:#EEF4EF;color:var(--ok);font-weight:700}
@@ -165,8 +177,9 @@ input.cell.plan{color:var(--stamp);font-weight:700;background:#F4EFFA}
 input.cell.bad{background:#FBE9E8;color:var(--alert)}
 td.wide input.cell{width:calc(var(--cell) + 8px)}
 
-tr.off td:not(.date){background:
-  url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='32'><path d='M0 16 q4.5 -6 9 0 t9 0 t9 0 t9 0' fill='none' stroke='%23AAB4C4' stroke-width='1'/></svg>") repeat-x center;
+tr.off td:not(.date){
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='32'><path d='M0 16 q4.5 -6 9 0 t9 0 t9 0 t9 0' fill='none' stroke='%23AAB4C4' stroke-width='1'/></svg>");
+  background-repeat:repeat-x;background-position:center;background-size:36px var(--rowh);
   background-color:#F5F4EF}
 tr.off input.cell{visibility:hidden}
 tr.sum td,tr.sum td.gA{background:#F2F0EA;box-shadow:inset 0 1px 0 0 var(--rule-strong)}
@@ -175,9 +188,9 @@ tr.sum td.date{background:#EFEFEA}
 tr.off td.date{background:#F3F2EE}
 tr.carry td,tr.carry td.gA{background:#FBFAF6}
 tr.carry td.date{background:#FBFAF6}
-tr.rowlabel td.date{font-size:9px;line-height:1.05;letter-spacing:0}
+tr.rowlabel td.date{font-size:calc(9px * var(--z));line-height:1.05;letter-spacing:0}
 tbody tr:last-child td{border-bottom:1px solid var(--rule-mid)}
-.newmonth td{height:26px}
+.newmonth td{height:calc(26px * var(--z))}
 
 /* ---------- статус ---------- */
 .status{margin:0 6px;background:var(--paper);color:var(--ink);padding:10px 12px 16px;border-top:1px dashed var(--rule)}
@@ -277,6 +290,12 @@ tbody tr:last-child td{border-bottom:1px solid var(--rule-mid)}
 </div>
 
 <div class="sheetwrap">
+  <div class="zoombar">
+    <button id="zOut" aria-label="Отдалить">−</button>
+    <button id="zFit" class="fit">Вся таблица</button>
+    <button id="zIn" aria-label="Приблизить">+</button>
+    <span id="zVal">100%</span>
+  </div>
   <div class="sheettitle">
     <h2 id="sheetName"></h2>
     <em id="sheetHint">Фиолетовые столбцы — только твои числа, остальное подберётся само</em>
@@ -445,6 +464,7 @@ let state = {
   activeOf: {1:'p1adult', 2:'adult'},
   weekOff: [5],          // 0=Пн … 6=Вс
   spread: 0.16,
+  zoom: 1,
   closed: {},            // старый формат, читается при загрузке
   holiday: {},           // "2026-8" -> [дни], отмечены вручную
   workday: {},           // "2026-8" -> [дни], открыты вручную вопреки выходному
@@ -1346,6 +1366,69 @@ function drawTabs(){
     '<button data-sheet="'+s.id+'" aria-selected="'+(s.id===state.active)+'">'+s.tab+'</button>').join('');
 }
 
+/* ---- масштаб таблицы ---- */
+const ZMIN = 0.34, ZMAX = 1.35;
+function applyZoom(){
+  document.documentElement.style.setProperty('--z', state.zoom.toFixed(3));
+  const el = document.getElementById('zVal');
+  if(el) el.textContent = Math.round(state.zoom*100)+'%';
+  // на сильном отдалении подписи столбцов превращаются в кашу — прячем их
+  document.documentElement.dataset.tiny = state.zoom < 0.52 ? '1' : '0';
+  const zi = document.getElementById('zIn'), zo = document.getElementById('zOut');
+  if(zi) zi.disabled = state.zoom >= ZMAX - 0.001;
+  if(zo) zo.disabled = state.zoom <= ZMIN + 0.001;
+}
+function setZoom(v, keepCenter){
+  const box = document.getElementById('scroll');
+  const before = state.zoom;
+  state.zoom = Math.min(ZMAX, Math.max(ZMIN, v));
+  if(box && keepCenter && before){
+    // держим центр видимой области на месте
+    const k = state.zoom / before;
+    const cx = box.scrollLeft + box.clientWidth/2;
+    const cy = box.scrollTop + box.clientHeight/2;
+    applyZoom();
+    box.scrollLeft = cx*k - box.clientWidth/2;
+    box.scrollTop  = cy*k - box.clientHeight/2;
+  }else applyZoom();
+  save();
+}
+// подобрать масштаб так, чтобы таблица влезла по ширине
+function fitZoom(){
+  const box = document.getElementById('scroll'), tbl = box && box.querySelector('table');
+  if(!tbl) return;
+  const cur = state.zoom || 1;
+  const need = box.clientWidth - 2;
+  const wide = tbl.scrollWidth / cur;          // ширина при масштабе 1
+  if(wide<=0) return;
+  setZoom(Math.floor((need/wide)*100)/100);
+  box.scrollLeft = 0;
+}
+document.getElementById('zIn').onclick  = ()=>setZoom(state.zoom + (state.zoom<0.7 ? 0.08 : 0.12), true);
+document.getElementById('zOut').onclick = ()=>setZoom(state.zoom - (state.zoom<=0.7 ? 0.08 : 0.12), true);
+document.getElementById('zFit').onclick = ()=>{
+  // повторное нажатие возвращает к 100%
+  if(Math.abs(state.zoom-1) > 0.02) fitZoom(); else fitZoom();
+};
+
+// щипок двумя пальцами прямо по таблице
+(function pinch(){
+  const box = document.getElementById('scroll');
+  let base = 0, startZ = 1, active = false;
+  const dist = t => Math.hypot(t[0].clientX-t[1].clientX, t[0].clientY-t[1].clientY);
+  box.addEventListener('touchstart', e=>{
+    if(e.touches.length===2){ active = true; base = dist(e.touches); startZ = state.zoom;
+      if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
+  }, {passive:true});
+  box.addEventListener('touchmove', e=>{
+    if(!active || e.touches.length!==2) return;
+    e.preventDefault();
+    const d = dist(e.touches);
+    if(base>0) setZoom(startZ * (d/base), true);
+  }, {passive:false});
+  box.addEventListener('touchend', e=>{ if(e.touches.length<2) active = false; }, {passive:true});
+})();
+
 /* ---- архив месяцев ---- */
 function monthKeys(){
   const set = {};
@@ -1542,7 +1625,11 @@ window.addEventListener('beforeunload', e=>{
   state.spread = 0.16;
   drawParts(); drawTabs(); drawWeekdays(); drawHoliBadge();
   document.getElementById('spread').value = String(state.spread);
+  if(!state.zoom || state.zoom<ZMIN || state.zoom>ZMAX) state.zoom = 1;
+  applyZoom();
   render();
   drawBackupHint();
+  // на узком экране сразу показываем таблицу целиком
+  requestAnimationFrame(()=>{ if(innerWidth < 760 && Math.abs(state.zoom-1) < 0.02) fitZoom(); });
 })();
 </script>
