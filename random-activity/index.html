@@ -450,6 +450,9 @@ const PROFILE = {
 const YOUTH_SHARE = {y15:[0.10,0.14], y35:[0.05,0.075], p1y15:[0.08,0.11], p1y35:[0.06,0.09]};
 // доля молодёжи в периодике / краеведении / ВСО от того, что стоит в общем листе
 const OWN_SHARE   = {y15:[0.20,0.40], y35:[0.15,0.35], p1y15:[0.12,0.28], p1y35:[0.22,0.42]};
+// доля молодёжи в каждой рубрике от того, что стоит в общем листе:
+// вместе они забирают меньше половины, остальное остаётся прочим читателям
+const CAT_SHARE   = {y15:[0.16,0.30], y35:[0.13,0.26]};
 
 const MONTHS = ['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
 const WD = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
@@ -705,10 +708,27 @@ function autoPlan(id){
     const v = num(d.plan[c.id]);
     if(v>0 && !d.auto[c.id]) fixed += v; else if(p.cats[c.id]) free.push(c); else d.plan[c.id]='';
   });
+  // для молодёжных листов рубрики считаются от рубрик общего листа
+  const g = groupOf(id), share = CAT_SHARE[id];
+  const parent = (share && g[0] !== id) ? data(g[0]) : null;
+  const other  = parent ? data(g[1] === id ? g[2] : g[1]) : null;
+
   const vals = {}; let extra = 0;
   free.forEach(c=>{
-    let v = Math.round(grand * p.cats[c.id] * rnd(0.65,1.4));
-    if(v<1 && grand*p.cats[c.id] >= 0.4) v = 1;
+    let v;
+    if(parent){
+      const base = num(parent.plan[c.id]);
+      if(base <= 0){ vals[c.id] = 0; return; }
+      v = Math.round(base * rnd(share[0], share[1]));
+      // вместе с соседним листом не больше 70% от общего столбца
+      const taken = num(other.plan[c.id]) && !other.auto[c.id] ? num(other.plan[c.id]) : num(other.plan[c.id]);
+      const room = Math.max(0, Math.floor(base*0.7) - taken);
+      v = Math.min(v, room);
+      if(v < 1 && base >= 4 && room >= 1) v = 1;
+    }else{
+      v = Math.round(grand * p.cats[c.id] * rnd(0.65,1.4));
+      if(v<1 && grand*p.cats[c.id] >= 0.4) v = 1;
+    }
     vals[c.id] = Math.max(0, v); extra += vals[c.id];
   });
   const cap = Math.floor(grand*0.55);          // главная рубрика не должна усохнуть
@@ -910,6 +930,12 @@ function randomizeSheet(id, caps){
       let need = grand - got;
       if(need>0) need = fillDeficit(rows, [dom], caps, need);
       if(need>0) need = fillDeficit(rows, others, caps, need);
+      // если из-за доли «прочих читателей» итог не добирается — снимаем резерв, итог важнее
+      const hard = caps.__hard;
+      if(need>0 && hard){
+        need = fillDeficit(rows, [dom], hard, need);
+        if(need>0) need = fillDeficit(rows, others, hard, need);
+      }
       if(need>0) short.push('не поместилось '+need+' кн.');
 
       rows.forEach(r=>{ r.tot = cats.reduce((sm,c)=>sm+num(r[c.id]),0) || ''; });
@@ -987,20 +1013,54 @@ function randomizeAll(part){
 }
 
 // сколько ещё можно взять в каждом столбце каждого дня: общий лист минус второй молодёжный
+// урезаем дневные лимиты так, чтобы их сумма не превысила месячный потолок
+function trimCaps(arr, limit){
+  let sum = arr.reduce((a,b)=>a+b,0);
+  if(limit >= sum || sum<=0) return arr;
+  if(limit<=0) return arr.map(()=>0);
+  const k = limit/sum;
+  const res = arr.map(v=>Math.floor(v*k));
+  let rest = limit - res.reduce((a,b)=>a+b,0);
+  const order = arr.map((v,i)=>({i,v})).filter(o=>o.v>res[o.i]).sort((a,b)=>b.v-a.v);
+  let p = 0;
+  while(rest>0 && order.length){ const i = order[p%order.length].i; if(res[i]<arr[i]){ res[i]++; rest--; } p++; if(p>arr.length*4) break; }
+  return res;
+}
+
 function capsFor(id){
   const days = openDays();
-  const g = groupOf(id), main = g[0];
-  const a = data(main), o = data(g[1]===id ? g[2] : g[1]);
+  const g = groupOf(id), main = g[0], otherId = (g[1]===id ? g[2] : g[1]);
+  const a = data(main), o = data(otherId);
   const adef = sheetDef(main);
   if(!days.some(dd=>num((a.days[dd]||{}).tot)>0)) return null;
-  const caps = {};
+
+  // какую долю от общего листа занимает молодёжь — столько же примерно и в каждой рубрике
+  const totMain = days.reduce((x,dd)=>x+num((a.days[dd]||{}).tot), 0);
+  const t1 = num(data(g[1]).plan.tot), t2 = num(data(g[2]).plan.tot);
+  const bothShare = totMain>0 ? (t1+t2)/totMain : 0;
+  const myPart = (t1+t2)>0 ? num(data(id).plan.tot)/(t1+t2) : 0.5;
+  // немного запаса сверху, но прочим читателям всегда остаётся хотя бы десятая часть
+  const maxShare = Math.min(0.9, bothShare*1.18 + 0.02);
+
+  const caps = {}, hard = {};
   sheetDef(id).cols.forEach(c=>{
     if(c.k===MIR || c.k===CALC || c.k===YEAR || c.lock) return;
     const inAdult = adef.cols.some(x=>x.id===c.id && !x.lock && x.k!==CALC && x.k!==MIR);
-    caps[c.id] = inAdult
-      ? days.map(dd=>Math.max(0, num((a.days[dd]||{})[c.id]) - num((o.days[dd]||{})[c.id])))
-      : days.map(()=>999999);
+    if(!inAdult){ caps[c.id] = days.map(()=>999999); hard[c.id] = days.map(()=>999999); return; }
+
+    let arr = days.map(dd=>Math.max(0, num((a.days[dd]||{})[c.id]) - num((o.days[dd]||{})[c.id])));
+    hard[c.id] = arr.slice();
+
+    // «Всего выдано» не ограничиваем — этот итог задаёт пользователь
+    if(c.k!==TOT && bothShare>0){
+      const monthMain = days.reduce((x,dd)=>x+num((a.days[dd]||{})[c.id]), 0);
+      const takenByOther = days.reduce((x,dd)=>x+num((o.days[dd]||{})[c.id]), 0);
+      const limit = Math.max(0, Math.round(monthMain*maxShare) - takenByOther);
+      arr = trimCaps(arr, limit);
+    }
+    caps[c.id] = arr;
   });
+  Object.defineProperty(caps, '__hard', {value:hard, enumerable:false});
   return caps;
 }
 
