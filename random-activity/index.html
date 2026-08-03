@@ -524,7 +524,7 @@ function openDays(){
 }
 
 /* ======================= ХРАНИЛИЩЕ ======================= */
-const APP_VERSION = 'v5';
+const APP_VERSION = 'v6';
 const KEY = 'randomactivity:v1';
 const BKEY = 'randomactivity:lastbackup';
 let storageOK = null;      // null — ещё не проверяли
@@ -1057,8 +1057,10 @@ function capsFor(id){
   const t1 = num(data(g[1]).plan.tot), t2 = num(data(g[2]).plan.tot);
   const bothShare = totMain>0 ? (t1+t2)/totMain : 0;
   const myPart = (t1+t2)>0 ? num(data(id).plan.tot)/(t1+t2) : 0.5;
-  // немного запаса сверху, но прочим читателям всегда остаётся хотя бы десятая часть
-  const maxShare = Math.min(0.9, bothShare*1.18 + 0.02);
+  // в бумажных дневниках молодёжь берёт мелкие рубрики заметно активнее, чем в среднем,
+  // а художественную литературу — примерно по своей доле
+  const catShare = Math.min(0.72, Math.max(bothShare*1.2, bothShare*2.5));
+  const domShare = Math.min(0.9,  bothShare*1.18 + 0.02);
 
   const caps = {}, hard = {};
   sheetDef(id).cols.forEach(c=>{
@@ -1074,7 +1076,14 @@ function capsFor(id){
     if(c.k===CAT && bothShare>0){
       const monthMain = days.reduce((x,dd)=>x+num((a.days[dd]||{})[c.id]), 0);
       const takenByOther = days.reduce((x,dd)=>x+num((o.days[dd]||{})[c.id]), 0);
-      const limit = Math.max(0, Math.round(monthMain*maxShare) - takenByOther);
+      // чем мельче рубрика, тем заметнее в ней доля молодёжи — так и в бумажных дневниках
+      let share = c.dom ? domShare
+        : Math.min(0.85, catShare * (monthMain<=12 ? 1.75 : monthMain<=30 ? 1.35 : 1.1));
+      const bothMax = Math.round(monthMain*share);          // сколько могут взять оба листа вместе
+      const avail   = Math.max(0, bothMax - takenByOther);  // сколько осталось после соседа
+      // своя доля с небольшим запасом — чтобы первый лист не забрал всё
+      const mine    = Math.max(1, Math.round(bothMax*myPart*1.3));
+      const limit   = Math.min(avail, Math.max(mine, Math.ceil(avail*0.34)));
       arr = trimCaps(arr, limit);
     }
     caps[c.id] = arr;

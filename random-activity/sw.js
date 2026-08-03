@@ -1,6 +1,6 @@
 /* Random Activity — офлайн-кэш.
    Меняй VERSION при каждом обновлении index.html, чтобы телефон подхватил новую версию. */
-const VERSION = 'ra-v5';
+const VERSION = 'ra-v6';
 const ASSETS = [
   './',
   './index.html',
