@@ -82,6 +82,8 @@ button:focus-visible{outline:2px solid var(--stamp);outline-offset:2px}
   text-transform:uppercase;color:#F0A9A4;margin-bottom:4px}
 .warn span{display:block;font-size:12.5px;line-height:1.5;color:#D9BDBA}
 .bk{margin-bottom:8px;color:#8FA3C4}
+.ver{margin-bottom:8px;color:#5C6B85;font-size:11px}
+.ver b{color:#8FA3C4;font-weight:400}
 .bk button.link{background:none;border:0;padding:0;margin:0;color:#D9C8F0;text-decoration:underline;
   font-family:inherit;font-size:12px;text-transform:none;letter-spacing:0}
 .totals{display:flex;gap:8px;padding:12px 12px 4px}
@@ -310,6 +312,7 @@ tbody tr:last-child td{border-bottom:1px solid var(--rule-mid)}
 
 <div class="footnote">
   <div id="bkHint" class="bk"></div>
+  <div class="ver">Версия <b id="verNum"></b></div>
   Данные сохраняются автоматически. Нажми на число дня в таблице или открой «Праздники», чтобы закрыть день во всех листах.
 </div>
 
@@ -335,6 +338,7 @@ tbody tr:last-child td{border-bottom:1px solid var(--rule-mid)}
 <div class="sheet-modal" id="modal">
   <div class="modal-card">
     <h3>Действия</h3>
+    <button id="mReset">Пересчитать подбор молодёжи заново</button>
     <button id="mArch">Сохранённые месяцы</button>
     <button id="mExample">Заполнить пример (август по фото, обе части)</button>
     <button id="mCsv">Выгрузить лист в CSV</button>
@@ -520,6 +524,7 @@ function openDays(){
 }
 
 /* ======================= ХРАНИЛИЩЕ ======================= */
+const APP_VERSION = 'v5';
 const KEY = 'randomactivity:v1';
 const BKEY = 'randomactivity:lastbackup';
 let storageOK = null;      // null — ещё не проверяли
@@ -964,7 +969,10 @@ function randomizeSheet(id, caps){
       if(t<=0) return;
       const lim = room(c).map((v,i)=>Math.min(v, num(rows[i].tot)||0 ? v : 0));
       const got = put(c, spreadCapped(t, lim, true));
-      if(got < t) short.push('«'+c.l+'»: влезло '+got+' из '+t);
+      if(got < t){
+        if(d.auto[c.id]) d.plan[c.id] = got || '';       // подобрано приложением — просто уточняем
+        else short.push('«'+c.l+'»: влезло '+got+' из '+t);
+      }
     });
   }
 
@@ -1602,6 +1610,16 @@ document.getElementById('btnMenu').onclick = ()=>modal.classList.add('open');
 document.getElementById('mClose').onclick = ()=>modal.classList.remove('open');
 modal.addEventListener('click', e=>{ if(e.target===modal) modal.classList.remove('open'); });
 
+document.getElementById('mReset').onclick = ()=>{
+  // всё, что подбирало приложение, будет подобрано заново; общий лист не трогаем
+  const [main, a1, a2] = GROUPS[state.part];
+  [a1,a2].forEach(id=>{
+    const d = data(id);
+    sheetDef(id).cols.forEach(c=>{ if(c.k!==TOT) { d.plan[c.id] = ''; delete d.auto[c.id]; } });
+  });
+  modal.classList.remove('open');
+  finish(randomizeAll(state.part));
+};
 document.getElementById('mArch').onclick = ()=>{ modal.classList.remove('open'); drawArch(); archModal.classList.add('open'); };
 document.getElementById('mExample').onclick = ()=>{
   state.year = 2026; state.month = 8;
@@ -1700,6 +1718,7 @@ window.addEventListener('beforeunload', e=>{
   applyZoom();
   render();
   drawBackupHint();
+  document.getElementById('verNum').textContent = APP_VERSION;
   // на узком экране сразу показываем таблицу целиком
   requestAnimationFrame(()=>{ if(innerWidth < 760 && Math.abs(state.zoom-1) < 0.02) fitZoom(); });
 })();
