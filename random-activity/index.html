@@ -758,6 +758,13 @@ function autoYouthTotal(id){
 function autoOwnTotals(part){
   const [main, s1, s2] = GROUPS[part];
   const a = data(main);
+  // доли листов по «Всего» — периодика и прочее делятся примерно так же
+  const at = num(a.plan.tot);
+  const shareOf = {};
+  [s1,s2].forEach(id=>{
+    const t = num(data(id).plan.tot);
+    shareOf[id] = (at>0 && t>0) ? t/at : 0;
+  });
   sheetDef(main).cols.filter(c=>c.own && c.k!==TOT).forEach(col=>{
     const base = num(a.plan[col.id]);
     const got = {};
@@ -766,8 +773,11 @@ function autoOwnTotals(part){
       if(!sheetDef(id).cols.some(c=>c.id===col.id)) return;
       if(num(d.plan[col.id])>0 && !d.auto[col.id]){ got[id] = num(d.plan[col.id]); return; }
       if(base<=0){ d.plan[col.id]=''; delete d.auto[col.id]; got[id]=0; return; }
-      const sh = OWN_SHARE[id];
-      got[id] = Math.round(base * rnd(sh[0], sh[1]));
+      const sh = shareOf[id] > 0
+        ? shareOf[id] * rnd(0.75, 1.35)          // как доля этого листа в общем итоге
+        : rnd(OWN_SHARE[id][0], OWN_SHARE[id][1]);
+      got[id] = Math.round(base * Math.min(0.85, sh));
+      if(got[id] < 1 && base >= 3) got[id] = 1;
     });
     // вместе не больше, чем в общем листе
     let over = (got[s1]||0) + (got[s2]||0) - base;
@@ -1051,8 +1061,9 @@ function capsFor(id){
     let arr = days.map(dd=>Math.max(0, num((a.days[dd]||{})[c.id]) - num((o.days[dd]||{})[c.id])));
     hard[c.id] = arr.slice();
 
-    // «Всего выдано» не ограничиваем — этот итог задаёт пользователь
-    if(c.k!==TOT && bothShare>0){
+    // долю ограничиваем только у рубрик: «Всего выдано» задаёт пользователь,
+    // а периодика, краеведение и ВСО согласуются отдельно, в autoOwnTotals
+    if(c.k===CAT && bothShare>0){
       const monthMain = days.reduce((x,dd)=>x+num((a.days[dd]||{})[c.id]), 0);
       const takenByOther = days.reduce((x,dd)=>x+num((o.days[dd]||{})[c.id]), 0);
       const limit = Math.max(0, Math.round(monthMain*maxShare) - takenByOther);
